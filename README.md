@@ -1,35 +1,36 @@
 # Projeto Aplicado III
 
-**HistFlix: um sistema de recomendação de filmes históricos e documentários**
+**HistFlix: um sistema de recomendação personalizado de filmes históricos e documentários**
 
-##  Grupo:
-* BRUNO BALTUILHE - 10424822 - 10424822@mackenzista.com.br 
-* ISAQUE PIMENTEL – 10415608 – 10415608@mackenzista.com.br
-* KELLY GRAZIELY PENA - 10416108 - 10416108@mackenzista.com.br
+## 📱 Grupo:
+* BRUNO BALTUILHE - 10424822 - ✉️ 10424822@mackenzista.com.br 
+* ISAQUE PIMENTEL – 10415608 – ✉️ 10415608@mackenzista.com.br
+* KELLY GRAZIELY PENA - 10416108 - ✉️ 10416108@mackenzista.com.br
   
-## Apresentação do Grupo
+## 💡 Apresentação do Grupo
 
-Somos um grupo de alunos de Ciências de Dados desenvolvendo um projeto de Sistema de Recomendação com o objetivo de melhorar as técnicas aprendizagem de disciplinas escolares além do âmbito da sala de aula.
+Somos um grupo de alunos de Ciências de Dados desenvolvendo um projeto de Sistema de Recomendação para melhorar as técnicas aprendizagem de disciplinas escolares além da sala de aula.
 
-Com esse objetivo, propomos o **HistFlix**, um sistema de recomendação de filmes e documentários de qualidade e relevância histórica, para estender o aprendizado da História além da aula de aula. 
+Propomos o **HistFlix**, um sistema de recomendação de filmes e documentários de qualidade e relevância histórica e educacional, para estender o aprendizado da História além da aula de aula. 
 Após a desenvolvimento do nosso produto, o apresentaremos para avaliação da disciplina de Projeto Aplicado III da Universidade Mackenzie.
 
-## Objetivo do Projeto
+## 🔍 Objetivo do Projeto
 
-**Objetivo Geral**
+🎯 **Objetivo Geral**
 
-Desenvolver um sistema de recomendação de filmes, séries e documentários que utilize um modelo híbrido de recomendação e inteligência artificial para interpretar as emoções do usuário e sugerir conteúdos alinhados ao seu estado emocional e preferências específicas. 
+Desenvolver um sistema de recomendação de filmes, séries e documentários que utilize um modelo híbrido de recomendação e inteligência artificial para interpretar as emoções do usuário e sugerir conteúdos alinhados ao seu estado emocional e preferências específicas, com o propósito de aumentar o interesse pela história e democratizar o acesso a conteúdos audiovisuais educativos. 
 
-**Objetivos Específicos**
-- Coletar e processar dados sobre filmes e documentários, utilizando a base de dados [adicionar nome da base de dados], para criar um modelo de recomendação personalizado.
-- Implementar técnicas de *filtragem colaborativa*, visando recomendar conteúdo baseado nas avaliações e preferências dos usuários.
-- Propor uma solução para o problema de *Cold Start*, sugerindo conteúdos relevantes para novos usuários com poucas interações.
-- Avaliar a *precisão* e a *eficácia* do sistema de recomendação, ajustando os parâmetros conforme necessário para melhorar a qualidade das sugestões.
+🛠️ **Objetivos Específicos**
+- Coletar e processar dados sobre filmes e documentários, utilizando a base de dados MovieLens, para criar um modelo de recomendação personalizado.
+- Implementar um modelo híbrido de recomendação, combinando filtragem colaborativa (que analisa o comportamento e as avaliações de outros usuários com perfis semelhantes) e filtragem baseada em conteúdo (que considera características específicas das obras audiovisuais, como gênero, duração, elenco e temática). 
+- Desenvolver uma interface interativa na qual os usuários possam expressar suas emoções e preferências momentâneas.
+- Integrar técnicas de Processamento de Linguagem Natural (PLN) para interpretar sentimentos e preferências expressas textualmente.
 
-## Motivação e justificativas
-O interesse crescente por métodos de ensino alternativos motiva este projeto, que explora como filmes e documentários podem complementar a educação tradicional por meio de uma abordagem visual e envolvente. Com o avanço da inteligência artificial, sistemas de recomendação permitem personalizar essas experiências, sugerindo conteúdos alinhados às preferências e necessidades de aprendizado dos usuários.
+## ✨ Motivação e justificativas
 
-Desenvolvido no Projeto Aplicado III do curso de Ciência de Dados, este trabalho visa aplicar técnicas de recomendação para enriquecer a aprendizagem além da sala de aula. O HistFlix busca oferecer recomendações precisas para estudantes, pesquisadores e entusiastas da história, alinhando-se aos Objetivos de Desenvolvimento Sustentável (ODS) da ONU ao facilitar o acesso a conteúdos educativos.
+A escolha do tema é impulsionada pelo crescente interesse em métodos de ensino alternativos que possam complementar os modelos tradicionais de educação. Filmes, séries e documentários despertam interesse em diferentes temas, como cultura, história e ciência, através de uma abordagem lúdica e visual. Além disso, o avanço da inteligência artificial permite que sistemas de recomendação personalizem essas experiências, sugerindo conteúdos alinhados às preferências dos usuários e suas necessidades de aprendizado.
+
+A HistFlix busca suprir a necessidade de um sistema especializado que forneça recomendações precisas e relevantes para estudantes, pesquisadores e entusiastas da história. Além disso, o projeto alinha-se aos Objetivos de Desenvolvimento Sustentável (ODS) da ONU, promovendo educação de qualidade ao facilitar o acesso a conteúdos educativos.
 
 ## 📅 Cronograma de Desenvolvimento  
 
