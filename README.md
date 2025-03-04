@@ -26,6 +26,11 @@ Desenvolver um sistema de recomendação de filmes, séries e documentários que
 - Propor uma solução para o problema de *Cold Start*, sugerindo conteúdos relevantes para novos usuários com poucas interações.
 - Avaliar a *precisão* e a *eficácia* do sistema de recomendação, ajustando os parâmetros conforme necessário para melhorar a qualidade das sugestões.
 
+**Motivação e justificativas**
+O interesse crescente por métodos de ensino alternativos motiva este projeto, que explora como filmes e documentários podem complementar a educação tradicional por meio de uma abordagem visual e envolvente. Com o avanço da inteligência artificial, sistemas de recomendação permitem personalizar essas experiências, sugerindo conteúdos alinhados às preferências e necessidades de aprendizado dos usuários.
+
+Desenvolvido no Projeto Aplicado III do curso de Ciência de Dados, este trabalho visa aplicar técnicas de recomendação para enriquecer a aprendizagem além da sala de aula. O HistFlix busca oferecer recomendações precisas para estudantes, pesquisadores e entusiastas da história, alinhando-se aos Objetivos de Desenvolvimento Sustentável (ODS) da ONU ao facilitar o acesso a conteúdos educativos.
+
 ## 📅 Cronograma de Desenvolvimento  
 
 | **Etapa**  | **Atividade**  | **Prazo**  | **Impacto Expansionista**  |  
