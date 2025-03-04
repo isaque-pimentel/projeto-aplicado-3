@@ -18,11 +18,23 @@ Após a desenvolvimento do nosso produto, o apresentaremos para avaliação da d
 
 **Objetivo Geral**
 
-Desenvolver um sistema de recomendação de filmes históricos e documentários educacionais, utilizando dados de interações de usuários, com o propósito de aumentar o interesse pela História e democratizar o acesso a conteúdos audiovisuais educativos.
+Desenvolver um sistema de recomendação de filmes, séries e documentários que utilize um modelo híbrido de recomendação e inteligência artificial para interpretar as emoções do usuário e sugerir conteúdos alinhados ao seu estado emocional e preferências específicas. 
 
 **Objetivos Específicos**
 - Coletar e processar dados sobre filmes e documentários, utilizando a base de dados [adicionar nome da base de dados], para criar um modelo de recomendação personalizado.
 - Implementar técnicas de *filtragem colaborativa*, visando recomendar conteúdo baseado nas avaliações e preferências dos usuários.
 - Propor uma solução para o problema de *Cold Start*, sugerindo conteúdos relevantes para novos usuários com poucas interações.
 - Avaliar a *precisão* e a *eficácia* do sistema de recomendação, ajustando os parâmetros conforme necessário para melhorar a qualidade das sugestões.
+
+## 📅 Cronograma de Desenvolvimento  
+
+| **Etapa**  | **Atividade**  | **Prazo**  | **Impacto Expansionista**  |  
+|------------|----------------|------------|---------------------------------|  
+| **Etapa 1**  | Concepção do Produto  | Semana 1-2  | Identificação de necessidades da comunidade e levantamento de filmes relevantes para educação histórica.  |  
+| **Etapa 2**  | Definição do Produto  | Semana 3-4  | Validar critérios de recomendação e ampliar a abrangência do sistema.  |  
+| **Etapa 3**  | Metodologia e Implementação do Modelo e Testes  | Semana 5-6  | Desenvolvimento do sistema com feedback de usuários.  |  
+| **Etapa 4**  | Resultado e Conclusão  | Semana 7-8  | Apresentação do projeto.  |  
+
+ 
+
 
