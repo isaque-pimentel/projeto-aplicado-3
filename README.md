@@ -3,8 +3,10 @@
 **HistFlix: um sistema de recomendação de filmes históricos e documentários**
 
 ##  Grupo:
+* BRUNO BALTUILHE - XXXXX - XXXXX@mackenzista.com.br 
 * ISAQUE PIMENTEL – 10415608 – 10415608@mackenzista.com.br
-
+* KELLY GRAZIELY PENA - 10416108 - 10416108@mackenzista.com.br
+  
 ## Apresentação do Grupo
 
 Somos um grupo de alunos de Ciências de Dados desenvolvendo um projeto de Sistema de Recomendação com o objetivo de melhorar as técnicas aprendizagem de disciplinas escolares além do âmbito da sala de aula.
