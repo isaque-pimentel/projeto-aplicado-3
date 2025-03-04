@@ -3,7 +3,7 @@
 **HistFlix: um sistema de recomendação de filmes históricos e documentários**
 
 ##  Grupo:
-* BRUNO BALTUILHE - XXXXX - XXXXX@mackenzista.com.br 
+* BRUNO BALTUILHE - 10424822 - 10424822@mackenzista.com.br 
 * ISAQUE PIMENTEL – 10415608 – 10415608@mackenzista.com.br
 * KELLY GRAZIELY PENA - 10416108 - 10416108@mackenzista.com.br
   
