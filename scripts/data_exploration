@@ -1,0 +1,134 @@
+"""
+Project: HistFlix: A Personalized Recommendation System for Historical Movies and Documentaries
+Authors: B Baltuilhe, I Pimentel, K Pena
+
+This module provides functions to load, explore, and analyze the MovieLens 1M dataset.
+
+Functions:
+    load_data(db_path: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        Loads data from a SQLite database.
+    
+    explore_data(users: pd.DataFrame, ratings: pd.DataFrame, movies: pd.DataFrame) -> None:
+        Explores the data by printing general information and statistics.
+    
+    plot_distributions(users: pd.DataFrame, ratings: pd.DataFrame, movies: pd.DataFrame) -> None:
+        Generates plots to visualize the data distributions.
+    
+    correlation_analysis(users: pd.DataFrame, ratings: pd.DataFrame) -> None:
+        Analyzes the correlation between age, gender, and ratings.
+"""
+import pandas as pd
+import sqlite3
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+from typing import Tuple
+
+
+def load_data(db_path: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Loads data from a SQLite database.
+
+    :param db_path: Path to the SQLite database file.
+    :return: A tuple containing three DataFrames: users, ratings, and movies.
+    """
+    conn = sqlite3.connect(db_path)
+    try:
+        users_df = pd.read_sql("SELECT * FROM users", conn)
+        ratings_df = pd.read_sql("SELECT * FROM ratings", conn)
+        movies_df = pd.read_sql("SELECT * FROM movies", conn)
+    finally:
+        conn.close()
+    return users_df, ratings_df, movies_df
+
+
+def explore_data(
+    users_df: pd.DataFrame, ratings_df: pd.DataFrame, movies_df: pd.DataFrame
+):
+    """
+    Explores the data by printing general information and statistics.
+
+    :param users_df: DataFrame containing user data.
+    :param ratings_df: DataFrame containing rating data.
+    :param movies_df: DataFrame containing movie data.
+    """
+    # Display general information about the datasets
+    print("\nUsers Info:\n", users_df.info(memory_usage="deep"))
+    print("\nRatings Info:\n", ratings_df.info(memory_usage="deep"))
+    print("\nMovies Info:\n", movies_df.info(memory_usage="deep"))
+
+    # Display descriptive statistics for ratings
+    print("\nDescriptive statistics for ratings:\n", ratings_df["Rating"].describe())
+
+    # Display distribution of user genders
+    print("\nDistribution of user genders:\n", users_df["Gender"].value_counts())
+
+    # Display top 10 highest rated movies
+    top_rated_movies = (
+        ratings_df.groupby("MovieID")["Rating"]
+        .mean()
+        .sort_values(ascending=False)
+        .head(10)
+    )
+    print("\nTop 10 highest rated movies:\n", top_rated_movies)
+
+    # Optionally, merge with movies DataFrame to get movie titles
+    top_rated_movies = top_rated_movies.reset_index().merge(movies_df, on="MovieID")[
+        ["Title", "Rating"]
+    ]
+    print("\nTop 10 highest rated movies with titles:\n", top_rated_movies)
+
+
+def plot_distributions(
+    users_df: pd.DataFrame, ratings_df: pd.DataFrame, movies_df: pd.DataFrame
+):
+    """
+    Generates plots to visualize the data distributions.
+
+    :param users_df: DataFrame containing user data.
+    :param ratings_df: DataFrame containing rating data.
+    :param movies_df: DataFrame containing movie data.
+    """
+    plt.figure(figsize=(12, 5))
+    sns.histplot(ratings_df["Rating"], bins=5, kde=True)
+    plt.title("Distribution of Ratings")
+    plt.xlabel("Rating")
+    plt.ylabel("Frequency")
+    plt.show()
+
+    plt.figure(figsize=(12, 5))
+    sns.countplot(x="Gender", data=users_df, palette="coolwarm")
+    plt.xticks([0, 1], ["Female", "Male"])
+    plt.title("Distribution of User Genders")
+    plt.xlabel("Gender")
+    plt.ylabel("Count")
+    plt.show()
+
+
+def correlation_analysis(users_df, ratings_df):
+    """
+    Analyzes the correlation between age, gender, and ratings.
+
+    :param users: DataFrame containing user data.
+    :param ratings: DataFrame containing rating data.
+    """
+    # Merge users and ratings DataFrames on UserID
+    merged = ratings_df.merge(users_df, on="UserID")
+    
+    # Calculate the correlation matrix
+    corr_matrix = merged[["Age", "Gender", "Rating"]].corr()
+
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f")
+    plt.title("Correlation Matrix")
+    plt.show()
+
+
+if __name__ == "__main__":
+    project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    db_path = os.path.join(project_dir, "dataset", "sqlite", "movielens_1m.db")
+
+    users, ratings, movies = load_data(db_path)
+    explore_data(users, ratings, movies)
+    plot_distributions(users, ratings, movies)
+    correlation_analysis(users, ratings)
