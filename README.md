@@ -41,6 +41,23 @@ A HistFlix busca suprir a necessidade de um sistema especializado que forneça r
 | **Etapa 3**  | Metodologia e Implementação do Modelo e Testes  | Semana 5-6  | Desenvolvimento do sistema com feedback de usuários.  |  
 | **Etapa 4**  | Resultado e Conclusão  | Semana 7-8  | Apresentação do projeto.  |  
 
+
+## Bibliotecas Python
+Abaixo está uma lista provável de bibliotecas Python que serão utilizadas no desenvolvimento do projeto:
+
+- **pandas**: Para manipulação e análise de dados estruturados.
+- **numpy**: Para operações matemáticas e manipulação de arrays numéricos.
+- **sqlite3**: Para interação com o banco de dados SQLite.
+- **scikit-learn**: Para implementação de algoritmos de aprendizado de máquina e métricas de avaliação.
+- **surprise**: Para construção e avaliação de sistemas de recomendação.
+- **matplotlib**: Para criação de gráficos e visualizações.
+- **seaborn**: Para visualizações estatísticas mais avançadas e estilizadas.
+- **pytest**: Para criação e execução de testes automatizados.
+- **os**: Para manipulação de caminhos e arquivos no sistema operacional.
+- **logging**: Para registro de logs e monitoramento do sistema.
+
+
+## Análise Exploratória
  
 
 
