@@ -56,6 +56,33 @@ Abaixo está uma lista provável de bibliotecas Python que serão utilizadas no 
 - **os**: Para manipulação de caminhos e arquivos no sistema operacional.
 - **logging**: Para registro de logs e monitoramento do sistema.
 
+## Etapa de Extração dos Dados
+
+A etapa de extração dos dados consiste em transformar os arquivos originais do MovieLens 1M, que estão no formato `.dat`, em tabelas estruturadas dentro de um banco de dados relacional SQLite. Essa transformação é essencial para facilitar a manipulação, consulta e análise dos dados durante o desenvolvimento do sistema de recomendação.
+
+### Passos Realizados:
+
+1. **Leitura dos Arquivos `.dat`**:
+   - Os arquivos `users.dat`, `ratings.dat` e `movies.dat` são lidos utilizando a biblioteca `pandas`.
+   - Cada arquivo é carregado em um DataFrame, com as colunas devidamente nomeadas de acordo com a documentação do MovieLens 1M.
+
+2. **Limpeza e Normalização dos Dados**:
+   - Remoção de valores ausentes ou inconsistentes.
+   - Conversão de tipos de dados para formatos mais eficientes (e.g., inteiros, floats).
+   - Normalização de colunas, como transformar o gênero em valores numéricos (e.g., 0 para "Feminino" e 1 para "Masculino").
+   - Extração de informações adicionais, como o ano de lançamento dos filmes a partir do título.
+
+3. **Criação do Banco de Dados SQLite**:
+   - Um banco de dados SQLite é criado utilizando a biblioteca `sqlite3`.
+   - As tabelas `users`, `ratings` e `movies` são criadas no banco de dados, e os dados limpos são inseridos diretamente a partir dos DataFrames.
+
+4. **Armazenamento Estruturado**:
+   - Os dados são armazenados no banco de dados SQLite, permitindo consultas SQL eficientes e integração com outras ferramentas de análise.
+
+### Benefícios:
+- **Eficiência**: A estrutura relacional do SQLite permite consultas rápidas e organizadas.
+- **Portabilidade**: O banco de dados SQLite é leve e pode ser facilmente compartilhado ou integrado ao sistema.
+- **Facilidade de Manipulação**: A utilização de SQL simplifica a extração de informações específicas para análises ou treinamento de modelos.
 
 ## Análise Exploratória
  
