@@ -12,13 +12,14 @@ Functions:
         Performs Exploratory Data Analysis (EDA) on the MovieLens 1M dataset.
 """
 
-import pandas as pd
-import sqlite3
-import matplotlib.pyplot as plt
-import seaborn as sns
-import os
-from typing import Tuple
 import logging
+import os
+import sqlite3
+from typing import Tuple
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 
 LOG_FILE = "data_analysis.log"
 
