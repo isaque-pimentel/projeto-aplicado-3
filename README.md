@@ -86,5 +86,48 @@ A etapa de extração dos dados consiste em transformar os arquivos originais do
 
 ## Análise Exploratória
  
+## Avaliação de Desempenho
+A avaliação do desempenho do modelo de recomendação será realizada utilizando as seguintes métricas:
 
+RMSE (Root Mean Squared Error): Mede a precisão da previsão das notas, comparando-as com os valores reais fornecidos pelos usuários.
 
+MAE (Mean Absolute Error): Mede a diferença média absoluta entre as previsões do modelo e os valores reais.
+
+Precisão@K e Recall@K: Avaliam a relevância das recomendações dentro do top-K recomendações feitas para cada usuário.
+
+Cobertura: Mede a proporção do catálogo que está sendo recomendado aos usuários, garantindo diversidade.
+
+Diversidade: Mede a variação entre os itens recomendados para um mesmo usuário.
+
+Serendipidade: Mede a capacidade do sistema de recomendar itens inesperados, mas relevantes.
+
+Tempo de Execução: Avalia a eficiência computacional do modelo ao gerar recomendações.
+
+## Referencial Teórico
+Sistemas de Recomendação: 
+Ferramentas para filtrar informações e prever preferências do usuário.
+Tipos principais: Filtragem Colaborativa (FC), Filtragem por Conteúdo (FCt), Sistemas Híbridos.
+Resnick, P., & Varian, H. R. (1997). "Recommender systems." Communications of the ACM, 40(3), 56-58.
+Sarwar, B., Karypis, G., Konstan, J., & Riedl, J. (2001). "Item-based collaborative filtering recommendation algorithms." In Proceedings of the 10th international conference on World Wide Web (pp. 285-295).
+
+Análise de Dados e Aprendizado de Máquina Específicos:
+Pré-processamento de Dados:
+Tratamento de dados ausentes: Imputação, remoção.
+Normalização e padronização de dados.
+Engenharia de recursos: Criação de novas variáveis relevantes.
+Aprendizado de Máquina para Recomendação:
+Algoritmos de regressão: Previsão de classificações de filmes.
+Algoritmos de classificação: Previsão de se um usuário gostará de um filme.
+Avaliação de modelos: Validação cruzada, métricas de avaliação específicas para recomendação (RMSE, MAE, precisão, recall).
+Géron, A. (2019). Hands-on machine learning with Scikit-Learn, Keras, and TensorFlow: Concepts, tools, and techniques to build intelligent systems.
+
+Bancos de Dados e Armazenamento Otimizados:
+Modelagem de dados para representar usuários, filmes e avaliações.
+Otimização de consultas SQL para recuperação eficiente de dados.
+Silberschatz, A., Korth, H. F., & Sudarshan, S. (2010). Database system concepts.
+
+Análise Exploratória de Dados (AED):
+Visualização da distribuição de avaliações, gêneros de filmes, etc.
+Identificação de padrões e insights relevantes para o sistema de recomendação.
+Apresentação de métricas de avaliação e exemplos de recomendações.
+McKinney, W. (2017). Python for data analysis: Data wrangling with Pandas, NumPy, and IPython.
