@@ -68,8 +68,8 @@ A etapa de extração dos dados consiste em transformar os arquivos originais do
 
 2. **Limpeza e Normalização dos Dados**:
    - Remoção de valores ausentes ou inconsistentes.
-   - Conversão de tipos de dados para formatos mais eficientes (e.g., inteiros, floats).
-   - Normalização de colunas, como transformar o gênero em valores numéricos (e.g., 0 para "Feminino" e 1 para "Masculino").
+   - Conversão de tipos de dados para formatos mais eficientes (e.g., int32, float32).
+   - Normalização de colunas, como transformar o gênero em valores numéricos (e.g., 0 para "F" e 1 para "M").
    - Extração de informações adicionais, como o ano de lançamento dos filmes a partir do título.
 
 3. **Criação do Banco de Dados SQLite**:
