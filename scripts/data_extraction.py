@@ -12,10 +12,11 @@ Functions:
         Saves the DataFrames to a SQLite database.
 """
 
-import sqlite3
-import os
-from typing import Tuple
 import logging
+import os
+import sqlite3
+from typing import Tuple
+
 import pandas as pd
 
 LOG_FILE = "data_extraction.log"
