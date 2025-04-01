@@ -21,7 +21,7 @@ import pandas as pd
 LOG_FILE = "data_extraction.log"
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s - %(levelname)s - %(funcName)s - %(message)s",
     handlers=[
         logging.FileHandler(LOG_FILE),  # Log file
