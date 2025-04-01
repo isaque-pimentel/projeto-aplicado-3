@@ -15,17 +15,24 @@ Functions:
     main() -> None:
         Main function to install libraries and generate the requirements file.
 """
+# Note: If you encounter issues while installing the 'surprise' library, such as a build error,
+# it is likely because the Microsoft C++ Build Tools are not installed. To resolve this:
+# 1. Download and install the Visual C++ Build Tools from this link:
+#    https://visualstudio.microsoft.com/visual-cpp-build-tools/
+# 2. During installation, ensure you select the "Desktop development with C++" workload.
+# 3. After installation, restart your system and try running the script again.
+
 import subprocess
 
 # List of libraries with their purposes
 LIBRARIES = [
-    "pandas",         # Data manipulation and analysis
-    "numpy",          # Mathematical operations
-    "scikit-learn",   # Machine learning algorithms
-    "surprise",       # Recommendation systems
-    "matplotlib",     # Plotting and visualization
-    "seaborn",        # Advanced visualizations
-    "pytest"          # Automated testing
+    "pandas",                   # Data manipulation and analysis
+    "numpy",                    # Mathematical operations
+    "scikit-learn",             # Machine learning algorithms
+    "scikit-surprise",          # Recommendation systems
+    "matplotlib",               # Plotting and visualization
+    "seaborn",                  # Advanced visualizations
+    "pytest"                    # Automated testing
 ]
 
 
