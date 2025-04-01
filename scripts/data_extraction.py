@@ -22,7 +22,7 @@ LOG_FILE = "data_extraction.log"
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(levelname)s - %(funcName)s - %(message)s",
     handlers=[
         logging.FileHandler(LOG_FILE),  # Log file
         logging.StreamHandler(),  # Console output
@@ -49,6 +49,12 @@ def extract_data(data_path: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFra
         users_file = os.path.join(data_path, "users.dat")
         ratings_file = os.path.join(data_path, "ratings.dat")
         movies_file = os.path.join(data_path, "movies.dat")
+        logging.debug(
+            "Constructed file paths: users_file=%s, ratings_file=%s, movies_file=%s",
+            users_file,
+            ratings_file,
+            movies_file,
+        )
 
         # Load the files into DataFrames
         users_df = pd.read_csv(users_file, sep="::", names=users_cols, engine="python")
@@ -61,6 +67,12 @@ def extract_data(data_path: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFra
             names=movies_cols,
             engine="python",
             encoding="latin-1",
+        )
+        logging.debug(
+            "Loaded data into DataFrames: users_df=%d rows, ratings_df=%d rows, movies_df=%d rows",
+            len(users_df),
+            len(ratings_df),
+            len(movies_df),
         )
 
         logging.info("Data successfully extracted.")
@@ -89,7 +101,12 @@ def clean_data(
         users_df.dropna(inplace=True)
         ratings_df.dropna(inplace=True)
         movies_df.dropna(inplace=True)
-        logging.info("Dropped rows with missing values.")
+        logging.debug(
+            "Dropped rows with missing values: users_df=%d rows, ratings_df=%d rows, movies_df=%d rows",
+            len(users_df),
+            len(ratings_df),
+            len(movies_df),
+        )
 
         # Ensure column datatypes
         users_df = users_df.astype(
@@ -99,31 +116,31 @@ def clean_data(
             {"UserID": "int32", "MovieID": "int32", "Rating": "float32"}
         )
         movies_df = movies_df.astype({"MovieID": "int32"})
-        logging.info("Ensured efficient datatypes for columns.")
+        logging.debug("Ensured efficient datatypes for columns.")
 
         # Normalize Gender column (0 for F, 1 for M)
         users_df["Gender"] = users_df["Gender"].map({"F": 0, "M": 1})
-        logging.info("Normalized 'Gender' column.")
+        logging.debug("Normalized 'Gender' column.")
 
         # Convert Timestamp column to datetime
         ratings_df["Timestamp"] = pd.to_datetime(ratings_df["Timestamp"], unit="s")
-        logging.info("Converted 'Timestamp' column to datetime format.")
+        logging.debug("Converted 'Timestamp' column to datetime format.")
 
         # Remove the Zip-code column from the users DataFrame
         users_df = users_df.drop(columns=["Zip-code"])
-        logging.info("Dropped 'Zip-code' column from users DataFrame.")
+        logging.debug("Dropped 'Zip-code' column from users DataFrame.")
 
         # Create a new column for the year of release
         movies_df["Year"] = (
             movies_df["Title"].str.extract(r"\((\d{4})\)").astype("Int32")
         )
-        logging.info("Extracted release year from movie titles.")
+        logging.debug("Extracted release year from movie titles.")
 
         # Create a new column for the genres
         genre_list = set("|".join(movies_df["Genres"]).split("|"))
         for genre in genre_list:
             movies_df[genre] = movies_df["Genres"].apply(lambda x: int(genre in x))
-        logging.info("Created genre columns for movies DataFrame.")
+        logging.debug("Created genre columns for movies DataFrame.")
 
         logging.info("Data cleaning process completed successfully.")
         return users_df, ratings_df, movies_df
@@ -159,6 +176,12 @@ def save_to_sqlite(
         users_df.to_sql("users", conn, if_exists="replace", index=False)
         ratings_df.to_sql("ratings", conn, if_exists="replace", index=False)
         movies_df.to_sql("movies", conn, if_exists="replace", index=False)
+        logging.debug(
+            "Data saved to SQLite database: users=%d rows, ratings=%d rows, movies=%d rows",
+            len(users_df),
+            len(ratings_df),
+            len(movies_df),
+        )
 
         logging.info("Data successfully saved to SQLite database.")
     except Exception as e:
@@ -178,6 +201,13 @@ if __name__ == "__main__":
         project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         data_path = os.path.join(project_dir, "dataset", "ml-1m")
         db_path = os.path.join(project_dir, "dataset", "sqlite", "movielens_1m.db")
+
+        logging.debug(
+            "Project directory: %s, Data path: %s, DB path: %s",
+            project_dir,
+            data_path,
+            db_path,
+        )
 
         users, ratings, movies = extract_data(data_path)
         users, ratings, movies = clean_data(users, ratings, movies)
