@@ -2,21 +2,12 @@
 Project: HistFlix: A Personalized Recommendation System for Historical Movies and Documentaries
 Authors: B Baltuilhe, I Pimentel, K Pena
 
-This module provides functions to load, explore, and analyze the MovieLens 1M dataset.
+This module provides functions to ....
 
 Functions:
-    load_data(db_path: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        Loads data from a SQLite database.
-    
-    explore_data(users: pd.DataFrame, ratings: pd.DataFrame, movies: pd.DataFrame) -> None:
-        Explores the data by printing general information and statistics.
-    
-    plot_distributions(users: pd.DataFrame, ratings: pd.DataFrame, movies: pd.DataFrame) -> None:
-        Generates plots to visualize the data distributions.
-    
-    correlation_analysis(users: pd.DataFrame, ratings: pd.DataFrame) -> None:
-        Analyzes the correlation between age, gender, and ratings.
+
 """
+
 import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt
@@ -114,7 +105,7 @@ def correlation_analysis(users_df, ratings_df):
     """
     # Merge users and ratings DataFrames on UserID
     merged = ratings_df.merge(users_df, on="UserID")
-    
+
     # Calculate the correlation matrix
     corr_matrix = merged[["Age", "Gender", "Rating"]].corr()
 
