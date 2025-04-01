@@ -263,13 +263,18 @@ if __name__ == "__main__":
     logging.info("Starting the HistFlix data analysis pipeline.")
 
     try:
+        # Path to the SQLite database
         project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         db_path = os.path.join(project_dir, "dataset", "sqlite", "movielens_1m.db")
 
         logging.debug("Project directory: %s, DB path: %s", project_dir, db_path)
 
+        # Load the ratings data
         users, ratings, movies = load_data(db_path)
+
+        # Perform Exploratoryu Data Analysis (EDA)
         perform_eda(users, ratings, movies)
+
         logging.info("Data analysis pipeline completed successfully.")
     except Exception as e:
         logging.critical("Data analysis pipeline failed: %s", e, exc_info=True)
