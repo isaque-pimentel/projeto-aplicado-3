@@ -119,6 +119,10 @@ Tempo de Execução: avalia a eficiência computacional do modelo ao gerar recom
 
 ## 📚 Referencial Teórico
 
+Este referencial teórico fundamenta as escolhas metodológicas e técnicas adotadas no desenvolvimento do **HistFlix**, nosso sistema de recomendação inteligente voltado à sugestão personalizada de filmes e documentários históricos, sensível ao estado emocional dos usuários. Para isso, são abordadas teorias, modelos e algoritmos amplamente utilizados em sistemas de recomendação, com base em estudos consolidados e pesquisas recentes.
+
+Além disso, esta seção contextualiza a aplicação de técnicas de Processamento de Linguagem Natural (NLP) na interpretação subjetiva das interações dos usuários e discute a sinergia entre essas abordagens. Ao reunir conceitos de filtragem colaborativa, filtragem baseada em conteúdo, modelos híbridos e análise de emoções, o referencial teórico embasa a proposta de um sistema robusto, contextual e orientado ao engajamento educacional.
+
 <!-- Sistemas de Recomendação: 
 Ferramentas para filtrar informações e prever preferências do usuário.
 Tipos principais: Filtragem Colaborativa (FC), Filtragem por Conteúdo (FCt), Sistemas Híbridos.
