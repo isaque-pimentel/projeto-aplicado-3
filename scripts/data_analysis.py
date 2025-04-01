@@ -23,7 +23,7 @@ import logging
 LOG_FILE = "data_analysis.log"
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(funcName)s - %(message)s",
     handlers=[
         logging.FileHandler(LOG_FILE),  # Log file
@@ -99,32 +99,48 @@ def perform_eda(
             "Descriptive statistics for ratings:\n%s", ratings_df["Rating"].describe()
         )
 
-        # Distribution of ratings
-        logging.debug("Plotting distribution of ratings.")
+        # Graph for statistics of ratings (violin plot)
+        logging.debug("Creating violin plot for rating statistics.")
+        plt.figure(figsize=(8, 6))
+        sns.violinplot(x="Rating", data=ratings_df, palette="muted")
+        plt.title("Distribuição de Estatísticas de Avaliações")
+        plt.xlabel("Avaliação")
+        plt.ylabel("Densidade")
+        plt.show()
+
+        # Distribution of ratings (with narrower bars and percentage on y-axis)
+        logging.debug("Plotting distribution of ratings with percentage.")
         plt.figure(figsize=(10, 5))
-        sns.histplot(ratings_df["Rating"], bins=5, kde=False, color="blue")
-        plt.title("Distribution of Ratings")
-        plt.xlabel("Rating")
-        plt.ylabel("Frequency")
+        sns.histplot(
+            ratings_df["Rating"],
+            bins=5,
+            kde=False,
+            color="blue",
+            stat="percent",
+            discrete=True,
+        )
+        plt.title("Distribuição de Avaliações")
+        plt.xlabel("Avaliação")
+        plt.ylabel("Porcentagem")
         plt.show()
 
         # Distribution of user genders
         logging.debug("Plotting distribution of user genders.")
         plt.figure(figsize=(6, 4))
         sns.countplot(x="Gender", data=users_df, palette="coolwarm")
-        plt.title("Distribution of User Genders")
-        plt.xlabel("Gender")
-        plt.ylabel("Count")
-        plt.xticks([0, 1], ["Female", "Male"])
+        plt.title("Distribuição de Gêneros dos Usuários")
+        plt.xlabel("Gênero")
+        plt.ylabel("Contagem")
+        plt.xticks([0, 1], ["Feminino", "Masculino"])
         plt.show()
 
-        # Distribution of user ages
-        logging.debug("Plotting distribution of user ages.")
+        # Distribution of user ages (narrower bars, no KDE)
+        logging.debug("Plotting distribution of user ages without KDE.")
         plt.figure(figsize=(10, 5))
-        sns.histplot(users_df["Age"], bins=10, kde=True, color="green")
-        plt.title("Distribution of User Ages")
-        plt.xlabel("Age")
-        plt.ylabel("Frequency")
+        sns.histplot(users_df["Age"], bins=15, kde=False, color="green")
+        plt.title("Distribuição de Idades dos Usuários")
+        plt.xlabel("Idade")
+        plt.ylabel("Frequência")
         plt.show()
 
         # Top 10 most rated movies
@@ -140,37 +156,43 @@ def perform_eda(
         )[["Title", "Rating"]]
         logging.info("Top 10 Most Rated Movies:\n%s", top_rated_movies)
 
-        # Average rating per genre
-        logging.debug("Calculating average rating per genre.")
+        # Average rating per genre (by gender)
+        logging.debug("Calculating average rating per genre by gender.")
         movies_df["Genres"] = movies_df["Genres"].str.split("|")
         genre_ratings = (
             ratings_df.merge(movies_df.explode("Genres"), on="MovieID")
-            .groupby("Genres")["Rating"]
+            .merge(users_df, on="UserID")
+            .groupby(["Genres", "Gender"])["Rating"]
             .mean()
-            .sort_values(ascending=False)
+            .unstack()
+            .sort_values(by=1, ascending=False)  # Sort by male ratings (1)
         )
-        logging.info("Average Rating per Genre:\n%s", genre_ratings)
-
-        # Correlation analysis
-        logging.debug("Performing correlation analysis.")
-        merged_df = ratings_df.merge(users_df, on="UserID")
-        corr_matrix = merged_df[["Age", "Gender", "Rating"]].corr()
-        plt.figure(figsize=(8, 6))
-        sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f")
-        plt.title("Correlation Matrix")
+        logging.info("Average Rating per Genre by Gender:\n%s", genre_ratings)
+        genre_ratings.plot(kind="bar", figsize=(12, 6), colormap="coolwarm")
+        plt.title("Média de Avaliações por Gênero de Filme e Gênero de Usuário")
+        plt.xlabel("Gênero de Filme")
+        plt.ylabel("Média de Avaliação")
+        plt.xticks(rotation=45)
+        plt.legend(["Feminino", "Masculino"], title="Gênero do Usuário")
         plt.show()
 
-        # Ratings over time
-        logging.debug("Analyzing ratings over time.")
-        ratings_df["Timestamp"] = pd.to_datetime(ratings_df["Timestamp"], unit="s")
-        ratings_over_time = ratings_df.groupby(
-            ratings_df["Timestamp"].dt.to_period("M")
-        )["Rating"].count()
-        ratings_over_time.plot(
-            figsize=(12, 6), title="Ratings Over Time", color="purple"
+        # Ratings over time (evolution by gender)
+        logging.debug("Analyzing ratings over time by gender.")
+        ratings_df["YearMonth"] = ratings_df["Timestamp"].dt.to_period("M")
+        ratings_over_time = (
+            ratings_df.merge(users_df, on="UserID")
+            .groupby(["YearMonth", "Gender"])["Rating"]
+            .count()
+            .unstack()
         )
-        plt.xlabel("Time")
-        plt.ylabel("Number of Ratings")
+        ratings_over_time.plot(
+            figsize=(12, 6),
+            title="Avaliações ao Longo do Tempo por Gênero",
+            color=["blue", "orange"],
+        )
+        plt.xlabel("Tempo")
+        plt.ylabel("Número de Avaliações")
+        plt.legend(["Feminino", "Masculino"], title="Gênero do Usuário")
         plt.show()
 
         logging.info("EDA completed successfully.")
