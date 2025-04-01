@@ -43,6 +43,7 @@ A HistFlix busca suprir a necessidade de um sistema especializado que forneça r
 
 
 ## Bibliotecas Python
+
 Abaixo está uma lista provável de bibliotecas Python que serão utilizadas no desenvolvimento do projeto:
 
 - **pandas**: Para manipulação e análise de dados estruturados.
@@ -84,27 +85,41 @@ A etapa de extração dos dados consiste em transformar os arquivos originais do
 - **Portabilidade**: O banco de dados SQLite é leve e pode ser facilmente compartilhado ou integrado ao sistema.
 - **Facilidade de Manipulação**: A utilização de SQL simplifica a extração de informações específicas para análises ou treinamento de modelos.
 
-## Análise Exploratória
- 
+## Análise Exploratória (EDA)
+
+A Análise Exploratória de Dados (EDA) foi conduzida para entender melhor o comportamento dos usuários, padrões de avaliação e a qualidade da base de dados. Os principais pontos analisados foram:
+
+Distribuição das Avaliações: Identificação da tendência dos usuários em dar notas mais altas e os padrões gerais de avaliação.
+
+Perfil dos Usuários: Análise de distribuição por gênero e faixa etária.
+
+Filmes Mais Bem Avaliados: Identificação dos filmes mais populares e melhor avaliados.
+
+Evolução das Avaliações: Observação do comportamento das avaliações ao longo do tempo.
+
+A EDA impacta diretamente o sistema de recomendação, pois permite ajustar o modelo para melhor atender aos perfis de usuários e identificar padrões de consumo de conteúdo. Para a versão em produção, consideramos utilizar uma base de dados maior, como o MovieLens 10M, para aprimorar a qualidade das recomendações e garantir maior robustez ao modelo.
+
 ## Avaliação de Desempenho
+
 A avaliação do desempenho do modelo de recomendação será realizada utilizando as seguintes métricas:
 
-RMSE (Root Mean Squared Error): Mede a precisão da previsão das notas, comparando-as com os valores reais fornecidos pelos usuários.
+RMSE (Root Mean Squared Error): mede a precisão da previsão das notas, comparando-as com os valores reais fornecidos pelos usuários.
 
-MAE (Mean Absolute Error): Mede a diferença média absoluta entre as previsões do modelo e os valores reais.
+<!-- MAE (Mean Absolute Error): Mede a diferença média absoluta entre as previsões do modelo e os valores reais. -->
 
-Precisão@K e Recall@K: Avaliam a relevância das recomendações dentro do top-K recomendações feitas para cada usuário.
+Precisão@K e Recall@K: avaliam a relevância das recomendações dentro do top-K recomendações feitas para cada usuário.
 
-Cobertura: Mede a proporção do catálogo que está sendo recomendado aos usuários, garantindo diversidade.
+<!-- Cobertura: mede a proporção do catálogo que está sendo recomendado aos usuários, garantindo diversidade.
 
-Diversidade: Mede a variação entre os itens recomendados para um mesmo usuário.
+Diversidade: mede a variação entre os itens recomendados para um mesmo usuário.
 
-Serendipidade: Mede a capacidade do sistema de recomendar itens inesperados, mas relevantes.
+Serendipidade: mede a capacidade do sistema de recomendar itens inesperados, mas relevantes.
 
-Tempo de Execução: Avalia a eficiência computacional do modelo ao gerar recomendações.
+Tempo de Execução: avalia a eficiência computacional do modelo ao gerar recomendações. -->
 
-## Referencial Teórico
-Sistemas de Recomendação: 
+## 📚 Referencial Teórico
+
+<!-- Sistemas de Recomendação: 
 Ferramentas para filtrar informações e prever preferências do usuário.
 Tipos principais: Filtragem Colaborativa (FC), Filtragem por Conteúdo (FCt), Sistemas Híbridos.
 Resnick, P., & Varian, H. R. (1997). "Recommender systems." Communications of the ACM, 40(3), 56-58.
@@ -130,4 +145,4 @@ Análise Exploratória de Dados (AED):
 Visualização da distribuição de avaliações, gêneros de filmes, etc.
 Identificação de padrões e insights relevantes para o sistema de recomendação.
 Apresentação de métricas de avaliação e exemplos de recomendações.
-McKinney, W. (2017). Python for data analysis: Data wrangling with Pandas, NumPy, and IPython.
+McKinney, W. (2017). Python for data analysis: Data wrangling with Pandas, NumPy, and IPython. -->
