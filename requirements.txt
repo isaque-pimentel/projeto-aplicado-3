@@ -5,3 +5,4 @@ surprise
 matplotlib
 seaborn
 pytest
+tabulate
