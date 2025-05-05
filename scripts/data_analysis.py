@@ -272,7 +272,7 @@ if __name__ == "__main__":
         # Load the ratings data
         users, ratings, movies = load_data(db_path)
 
-        # Perform Exploratoryu Data Analysis (EDA)
+        # Perform Exploratory Data Analysis (EDA)
         perform_eda(users, ratings, movies)
 
         logging.info("Data analysis pipeline completed successfully.")
