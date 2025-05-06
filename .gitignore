@@ -174,3 +174,8 @@ cython_debug/
 # Make files
 Makefile
 make.bat
+
+# VS Code settings
+.vscode/settings.json
+.vscode/tasks.json
+*.code-workspace
