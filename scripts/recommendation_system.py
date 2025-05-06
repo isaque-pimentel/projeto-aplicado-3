@@ -34,10 +34,10 @@ import pickle
 import sqlite3
 from collections import defaultdict
 
-import numpy as np
 import pandas as pd
+from helpers import perform_cross_validation
 from surprise import SVD, Dataset, Reader, accuracy
-from surprise.model_selection import cross_validate, train_test_split
+from surprise.model_selection import train_test_split
 
 LOG_FILE = "recommendation_system.log"
 
@@ -195,31 +195,11 @@ def train_and_evaluate_svd_with_timestamp(ratings_df: pd.DataFrame, model_path: 
 
     # Evaluate the model on the test set
     predictions = algo.test(testset)
-    rmse = accuracy.rmse(predictions, verbose=True)
+    rmse = accuracy.rmse(predictions)
     logging.info("RMSE on test set: %.4f", rmse)
 
-    # Calculate Precision and Recall at K
-    precision, recall = precision_recall_at_k(predictions, k=10, threshold=3.5)
-    logging.info("Precision@10: %.4f, Recall@10: %.4f", precision, recall)
-
     # Perform cross-validation and track the best model
-    logging.info("Performing cross-validation.")
-    best_rmse = float("inf")
-    best_model = None
-
-    kfolds = 5
-    for fold in range(kfolds):
-        trainset, testset = train_test_split(data, test_size=0.2, random_state=fold)
-        algo = SVD()
-        algo.fit(trainset)
-        predictions = algo.test(testset)
-        fold_rmse = accuracy.rmse(predictions, verbose=False)
-        logging.info("Fold %d RMSE: %.4f", fold + 1, fold_rmse)
-
-        if fold_rmse < best_rmse:
-            best_rmse = fold_rmse
-            best_model = algo
-
+    best_model, best_rmse = perform_cross_validation(data, kfolds=5)
     logging.info("Best RMSE from cross-validation: %.4f", best_rmse)
 
     # Save the best-performing model

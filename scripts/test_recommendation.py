@@ -151,7 +151,7 @@ if __name__ == "__main__":
             algo, ratings_df, movies_df, user_id
         )
         print_table(comparisons_df, "Real vs Predicted Ratings")
-        
+
         # Generate and display recommendations
         top_n = get_top_n_recommendations(algo, ratings_df, movies_df, user_id, n=10)
 

@@ -28,7 +28,10 @@ Functions:
 
 import logging
 import pickle
+
 import pandas as pd
+from surprise import SVD, accuracy
+from surprise.model_selection import train_test_split
 from tabulate import tabulate
 
 
@@ -120,3 +123,45 @@ def get_movie_details(movie_id: int, movies_df: pd.DataFrame) -> dict:
     """
     movie_details = movies_df[movies_df["MovieID"] == movie_id].iloc[0].to_dict()
     return movie_details
+
+
+def calculate_rmse(predictions) -> float:
+    """
+    Calculates the RMSE for a given set of predictions.
+
+    :param predictions: List of predictions from the Surprise library.
+    :return: The RMSE value.
+    """
+
+    rmse = accuracy.rmse(predictions, verbose=False)
+    logging.info("Calculated RMSE: %.4f", rmse)
+    return rmse
+
+
+def perform_cross_validation(data, kfolds: int = 5) -> tuple:
+    """
+    Performs cross-validation to find the best model based on RMSE.
+
+    :param data: Surprise Dataset object.
+    :param kfolds: Number of folds for cross-validation.
+    :return: The best model and its RMSE.
+    """
+
+    logging.info("Performing cross-validation with %d folds.", kfolds)
+    best_rmse = float("inf")
+    best_model = None
+
+    for fold in range(kfolds):
+        trainset, testset = train_test_split(data, test_size=0.2, random_state=fold)
+        algo = SVD()
+        algo.fit(trainset)
+        predictions = algo.test(testset)
+        fold_rmse = calculate_rmse(predictions)
+        logging.info("Fold %d RMSE: %.4f", fold + 1, fold_rmse)
+
+        if fold_rmse < best_rmse:
+            best_rmse = fold_rmse
+            best_model = algo
+
+    logging.info("Best RMSE from cross-validation: %.4f", best_rmse)
+    return best_model, best_rmse

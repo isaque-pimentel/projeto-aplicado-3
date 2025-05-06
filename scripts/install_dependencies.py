@@ -98,7 +98,7 @@ def create_requirements_file(env_name: str) -> None:
     )
     try:
         installed_packages = subprocess.check_output([pip_path, "freeze"], text=True)
-        with open("requirements.txt", "w") as req_file:
+        with open("requirements.txt", "w", encoding="utf-8") as req_file:
             req_file.write(installed_packages)
         print("File 'requirements.txt' created successfully!")
     except Exception as e:
