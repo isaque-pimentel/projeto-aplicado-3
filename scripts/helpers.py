@@ -1,3 +1,31 @@
+"""
+Project: HistFlix: A Personalized Recommendation System for Historical Movies and Documentaries
+Authors: B Baltuilhe, I Pimentel, K Pena
+
+This script provides helper functions for the recommendation system. These functions
+include utilities for printing tables, validating data, loading models, and retrieving
+user and movie details.
+
+Functions:
+    print_table(df: pd.DataFrame, title: str) -> None:
+        Prints a DataFrame in a tabular format using the tabulate library.
+
+    validate_data(users_df: pd.DataFrame, ratings_df: pd.DataFrame, movies_df: pd.DataFrame) -> None:
+        Validates the cleaned DataFrames to ensure data integrity.
+
+    reverse_gender_mapping(gender: int) -> str:
+        Reverses the gender mapping (0 -> F, 1 -> M).
+
+    load_model(model_path: str):
+        Loads a trained model from a file.
+
+    get_user_details(user_id: int, users_df: pd.DataFrame) -> dict:
+        Retrieves user details from the users DataFrame.
+
+    get_movie_details(movie_id: int, movies_df: pd.DataFrame) -> dict:
+        Retrieves movie details from the movies DataFrame.
+"""
+
 import logging
 import pickle
 import pandas as pd
