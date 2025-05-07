@@ -10,13 +10,15 @@ and content-based filtering.
 import logging
 import os
 import sqlite3
-import pandas as pd
 
-from helpers import load_model, print_table
-from hybrid_recommendation_system import (
+import pandas as pd
+from helpers import (
     calculate_content_similarity,
-    calculate_hybrid_scores,
+    evaluate_recommendations,
+    load_model,
+    print_table,
 )
+from hybrid_recommendation_system import calculate_hybrid_scores
 
 LOG_FILE = "test_hybrid_recommendation.log"
 
@@ -164,12 +166,35 @@ if __name__ == "__main__":
 
         # Interactive testing
         user_id = int(input("Enter the User ID for recommendations: "))
-        top_n = get_top_n_hybrid_recommendations(
-            algo, ratings_df, movies_df, user_id, similarity_df, n=10, alpha=0.7
+        user_ratings = ratings_df[ratings_df["UserID"] == user_id]
+
+        # Generate hybrid recommendations
+        top_n = calculate_hybrid_scores(algo, user_ratings, similarity_df, alpha=0.7)
+        recommendations = pd.DataFrame(
+            [
+                {
+                    "MovieID": movie_id,
+                    "Title": movies_df[movies_df["MovieID"] == movie_id][
+                        "Title"
+                    ].values[0],
+                    "Genres": movies_df[movies_df["MovieID"] == movie_id][
+                        "Genres"
+                    ].values[0],
+                    "HybridScore": score,
+                }
+                for _, movie_id, score in top_n
+            ]
         )
 
         # Display recommendations
-        print_table(top_n, f"Top 10 Hybrid Recommendations for User {user_id}")
+        print_table(
+            recommendations, f"Top 10 Hybrid Recommendations for User {user_id}"
+        )
 
+        # Evaluate recommendations
+        metrics = evaluate_recommendations(recommendations, user_ratings, n=10)
+        print("\nEvaluation Metrics:")
+        for metric, value in metrics.items():
+            print(f"{metric}: {value:.2f}")
     except Exception as e:
         logging.critical("Interactive testing failed: %s", e, exc_info=True)
