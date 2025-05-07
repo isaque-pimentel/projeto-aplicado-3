@@ -236,9 +236,6 @@ if __name__ == "__main__":
         # Train and evaluate the recommendation system with temporal information
         train_and_evaluate_svd_with_timestamp(ratings_df, model_path)
 
-        # # Train and evaluate the recommendation system
-        # train_and_evaluate_svd(ratings_df)
-
         logging.info("Recommendation system pipeline completed successfully.")
     except Exception as e:
         logging.critical("Pipeline failed: %s", e, exc_info=True)
