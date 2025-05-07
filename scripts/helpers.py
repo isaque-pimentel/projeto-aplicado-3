@@ -225,13 +225,16 @@ def precision_recall_at_k(predictions, k=10, threshold=3.5):
 
 
 def calculate_content_similarity(
-    movies_df: pd.DataFrame, method: str = "count"
+    movies_df: pd.DataFrame, method: str = "count", use_sentiment: bool = False
 ) -> pd.DataFrame:
     """
     Calculates the cosine similarity between movies based on their genres.
 
     :param movies_df: DataFrame containing movie information.
+    :param method: The method to use for vectorization ("count" or "tfidf").
+    :param use_sentiment: Whether to include SentimentScore in the similarity computation.
     :return: A DataFrame containing the similarity scores between movies.
+
     """
     logging.info("Calculating content-based similarity for movies.")
 
@@ -246,9 +249,14 @@ def calculate_content_similarity(
         + movies_df["Title"].fillna("")
         + "|"
         + movies_df["Year"].fillna("")
-        + "|"
-        + movies_df["SentimentScore"].astype(str)
     )
+
+    # Optionally include SentimentScore with a weight
+    if use_sentiment and "SentimentScore" in movies_df.columns:
+        sentiment_weight = 0.5  # Adjust the weight as needed
+        movies_df["CombinedFeatures"] += "|" + (
+            movies_df["SentimentScore"] * sentiment_weight
+        ).astype(str)
 
     # Define a custom tokenizer to split on spaces
     def custom_tokenizer(text):
@@ -308,3 +316,51 @@ def calculate_sentiment_scores(
 
     logging.info("Sentiment scores calculated successfully.")
     return movies_df
+
+
+def evaluate_recommendations(
+    recommendations: pd.DataFrame, user_ratings: pd.DataFrame, n: int = 10
+) -> dict:
+    """
+    Evaluates the quality of recommendations using Precision@N, Recall@N, and F1-Score.
+
+    :param recommendations: DataFrame containing the recommended movies.
+    :param user_ratings: DataFrame containing the user's actual ratings.
+    :param n: The number of recommendations to evaluate.
+    :return: A dictionary containing evaluation metrics.
+    """
+    logging.info("Evaluating recommendations.")
+
+    # Get the top N recommended movie IDs
+    recommended_movie_ids = recommendations["MovieID"].head(n).tolist()
+
+    # Get the relevant movie IDs (movies rated 4 or higher by the user)
+    relevant_movie_ids = user_ratings[user_ratings["Rating"] >= 4]["MovieID"].tolist()
+
+    # Calculate Precision@N
+    true_positives = len(set(recommended_movie_ids) & set(relevant_movie_ids))
+    precision_at_n = true_positives / n if n > 0 else 0
+
+    # Calculate Recall@N
+    recall_at_n = true_positives / len(relevant_movie_ids) if relevant_movie_ids else 0
+
+    # Calculate F1-Score
+    if precision_at_n + recall_at_n > 0:
+        f1_score = 2 * (precision_at_n * recall_at_n) / (precision_at_n + recall_at_n)
+    else:
+        f1_score = 0
+
+    logging.info(
+        "Evaluation Metrics - Precision@%d: %.2f, Recall@%d: %.2f, F1-Score: %.2f",
+        n,
+        precision_at_n,
+        n,
+        recall_at_n,
+        f1_score,
+    )
+
+    return {
+        "Precision@N": precision_at_n,
+        "Recall@N": recall_at_n,
+        "F1-Score": f1_score,
+    }
