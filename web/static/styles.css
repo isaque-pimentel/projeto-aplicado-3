@@ -1,0 +1,29 @@
+body {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+.navbar {
+    border-bottom: 2px solid #f5c518;
+}
+
+h1, .navbar-brand {
+    color: #f5c518;
+}
+
+.btn-warning {
+    background-color: #f5c518;
+    border-color: #f5c518;
+    color: #000000;
+}
+
+.btn-warning:hover {
+    background-color: #e4b10f;
+    border-color: #e4b10f;
+    color: #000000;
+}
+
+.table-warning {
+    background-color: #f5c518;
+    color: #000000;
+}

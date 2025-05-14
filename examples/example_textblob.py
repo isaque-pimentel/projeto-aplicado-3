@@ -74,12 +74,9 @@ def sentence_analysis():
         )
 
 
-# analyze_sentiment()
-
-# translate_text()
-
-# tokenize_text()
-
+analyze_sentiment()
+translate_text()
+tokenize_text()
 correct_spelling()
 word_inflection()
 sentence_analysis()
