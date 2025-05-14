@@ -3,13 +3,6 @@ Project: HistFlix: A Personalized Recommendation System for Historical Movies an
 Authors: B Baltuilhe, I Pimentel, K Pena
 
 This module provides functions to load the MovieLens 1M dataset and save it to a SQLite database.
-
-Functions:
-    extract_data(data_path: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        Extracts the MovieLens 1M dataset and returns DataFrames for users, movies, and ratings.
-
-    save_to_sqlite(users: pd.DataFrame, ratings: pd.DataFrame, movies: pd.DataFrame, db_path: str) -> None:
-        Saves the DataFrames to a SQLite database.
 """
 
 import logging

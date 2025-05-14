@@ -2,14 +2,7 @@
 Project: HistFlix: A Personalized Recommendation System for Historical Movies and Documentaries
 Authors: B Baltuilhe, I Pimentel, K Pena
 
-This module provides functions to perform exploratory data analysis (EDA) on the MovieLens 1M dataset.
-
-Functions:
-    load_data(db_path: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        Loads data from a SQLite database.
-
-    perform_eda(users_df: pd.DataFrame, ratings_df: pd.DataFrame, movies_df: pd.DataFrame) -> None:
-        Performs Exploratory Data Analysis (EDA) on the MovieLens 1M dataset.
+This module provides functions to perform EDA on the MovieLens 1M dataset.
 """
 
 import logging

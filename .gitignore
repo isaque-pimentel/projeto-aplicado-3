@@ -176,6 +176,5 @@ Makefile
 make.bat
 
 # VS Code settings
-.vscode/settings.json
-.vscode/tasks.json
+.vscode
 *.code-workspace
