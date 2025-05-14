@@ -178,3 +178,13 @@ make.bat
 # VS Code settings
 .vscode
 *.code-workspace
+
+# Latex files
+*.aux
+*.bbl
+*.blg
+*.nav
+*.toc
+*.out
+*.snm
+*.synctex.gz

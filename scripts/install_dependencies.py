@@ -37,7 +37,8 @@ LIBRARIES = [
     "pytest",  # Automated testing
     "tabulate",
     "textblob",  # Text processing
-    "nltk",  # Natural Language Toolkit
+    "nltk",  # Natural Language Toolkit,
+    "googletrans==4.0.0-rc1",  # Google Translate API
 ]
 
 
