@@ -1,8 +1,30 @@
 \documentclass{beamer}
 
-\usetheme{Madrid}
+\usetheme{default}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{xcolor}
+
+% Define custom colors based on styles.css
+\definecolor{imdbYellow}{HTML}{F5C518} % IMDb yellow
+\definecolor{imdbBlack}{HTML}{000000} % Black background
+\definecolor{imdbWhite}{HTML}{FFFFFF} % White text
+\definecolor{imdbHoverYellow}{HTML}{E4B10F} % Hover yellow
+
+% Apply the custom colors
+\setbeamercolor{background canvas}{bg=imdbBlack}
+\setbeamercolor{normal text}{fg=imdbWhite}
+\setbeamercolor{frametitle}{bg=imdbYellow, fg=imdbBlack}
+\setbeamercolor{title}{fg=imdbYellow}
+\setbeamercolor{subtitle}{fg=imdbYellow}
+\setbeamercolor{section in toc}{fg=imdbYellow}
+\setbeamercolor{item}{fg=imdbYellow}
+\setbeamercolor{block title}{bg=imdbYellow, fg=imdbBlack}
+\setbeamercolor{block body}{bg=imdbBlack, fg=imdbWhite}
+
+% Set font for better readability
+\usepackage{lmodern}
+\renewcommand{\familydefault}{\sfdefault}
 
 \title[HistFlix: Sistema de Recomendação Híbrido]{HistFlix: Um Sistema Personalizado para Filmes Históricos e Documentários}
 \author{Bruno Baltuilhe, Isaque Pimentel, Kelly Graziely Pena}
@@ -97,7 +119,7 @@
     % \vspace{0.5cm}
     \textbf{Componentes Principais:}
     \begin{itemize}
-        \item Pré-processamento e (TBD: enriquecimento de dados usando API TMDB).
+        \item Pré-processamento e enriquecimento de dados usando API TMDB.
         \item Filtragem colaborativa (SVD).
         \item Filtragem baseada em conteúdo (matriz de similaridade).
         \item Análise de sentimentos (TextBlob).
@@ -113,12 +135,6 @@
         \item \textbf{Revocação@10:} 0.68.
         \item \textbf{F1-Score:} 0.74.
     \end{itemize}
-    % \vspace{0.5cm}
-    % \textbf{Feedback dos Usuários:}
-    % \begin{itemize}
-    %     \item Sentimento positivo para recomendações personalizadas.
-    %     \item Maior engajamento com conteúdos históricos.
-    % \end{itemize}
 \end{frame}
 
 % Slide 8: Exemplos de Recomendações
