@@ -13,7 +13,7 @@ import sqlite3
 
 import pandas as pd
 from googletrans import Translator
-from helpers import load_model, print_table
+from scripts.helpers import load_model, print_table
 from textblob import TextBlob
 
 LOG_FILE = "test_hybrid_recommendation.log"
