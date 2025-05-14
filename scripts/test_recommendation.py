@@ -5,17 +5,6 @@ Authors: B Baltuilhe, I Pimentel, K Pena
 This script provides an interactive testing environment for the recommendation system.
 It allows users to compare real and predicted ratings for movies they have rated and
 generates top N movie recommendations for a given user.
-
-Functions:
-    get_top_n_recommendations(algo, ratings_df: pd.DataFrame, movies_df: pd.DataFrame, user_id: int, n: int = 10) -> list:
-        Generates the top N recommendations for a given user.
-
-    compare_real_and_predicted_ratings(algo, ratings_df: pd.DataFrame, movies_df: pd.DataFrame, user_id: int) -> pd.DataFrame:
-        Compares real ratings with predicted ratings for movies the user has already rated.
-
-    main():
-        The entry point of the script. Loads the trained model and data, validates the data,
-        and provides an interactive interface for testing recommendations.
 """
 
 import logging

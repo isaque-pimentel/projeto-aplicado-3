@@ -6,26 +6,6 @@ This script implements the recommendation system for the MovieLens 1M dataset. I
 functions for loading data, preprocessing temporal information, training an SVD-based
 recommendation model, and evaluating its performance using metrics such as RMSE, Precision@K,
 and Recall@K. The best-performing model is saved for later use.
-
-Functions:
-    load_data_from_sqlite(db_path: str) -> pd.DataFrame:
-        Loads the ratings data from the SQLite database.
-
-    preprocess_with_timestamp(ratings_df: pd.DataFrame) -> pd.DataFrame:
-        Preprocesses the ratings DataFrame to include temporal information.
-
-    precision_recall_at_k(predictions, k=10, threshold=3.5):
-        Calculates Precision and Recall at K.
-
-    save_model(algo, model_path: str) -> None:
-        Saves the trained model to a file.
-
-    train_and_evaluate_svd_with_timestamp(ratings_df: pd.DataFrame, model_path: str):
-        Trains and evaluates an SVD-based recommendation system using temporal information.
-
-    main():
-        The entry point of the script. Loads the data, trains the model, evaluates it,
-        and saves the best-performing model.
 """
 
 import logging
