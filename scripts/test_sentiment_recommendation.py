@@ -10,10 +10,11 @@ content-based filtering, and sentiment analysis based on user input.
 import logging
 import os
 import sqlite3
-import pandas as pd
-from textblob import TextBlob
-from helpers import load_model, print_table
 
+import pandas as pd
+from googletrans import Translator
+from helpers import load_model, print_table
+from textblob import TextBlob
 
 LOG_FILE = "test_hybrid_recommendation.log"
 
@@ -34,8 +35,13 @@ def analyze_user_input(user_input: str) -> float:
     :param user_input: The text input from the user describing their mood and preferences.
     :return: A sentiment polarity score (-1.0 to 1.0).
     """
+    translator = Translator()
+    translation = translator.translate(user_input, dest="en")
+    logging.info("Translating user input to English: %s", translation.text)
+    blob = TextBlob(translation.text)
+
     logging.info("Analyzing user input sentiment.")
-    sentiment_score = TextBlob(user_input).sentiment.polarity
+    sentiment_score = blob.sentiment.polarity
     logging.info("User input sentiment score: %.2f", sentiment_score)
     return sentiment_score
 
