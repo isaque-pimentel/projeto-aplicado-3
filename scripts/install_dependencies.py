@@ -39,6 +39,7 @@ LIBRARIES = [
     "textblob",  # Text processing
     "nltk",  # Natural Language Toolkit,
     "googletrans==4.0.0-rc1",  # Google Translate API
+    "flask",  # Web framework
 ]
 
 
