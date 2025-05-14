@@ -2,21 +2,9 @@
 Project: HistFlix: A Personalized Recommendation System for Historical Movies and Documentaries
 Authors: B Baltuilhe, I Pimentel, K Pena
 
-This script automates the installation of required Python libraries and generates a `requirements.txt` file
-for the project. It ensures that all necessary dependencies are installed and provides feedback on the process.
-
-Functions:
-    create_virtual_environment(env_name: str) -> None:
-        Creates a virtual environment for the project.
-
-    install_library(lib: str, env_name: str) -> None:
-        Installs a single Python library in the virtual environment using pip.
-
-    create_requirements_file(env_name: str) -> None:
-        Creates a `requirements.txt` file with the list of libraries and their installed versions.
-
-    main() -> None:
-        Main function to create a virtual environment, install libraries, and generate the requirements file.
+This script automates the installation of required Python libraries and generates a
+`requirements.txt` file for the project.
+It ensures that all necessary dependencies are installed and provides feedback on the process.
 """
 
 # Note: If you encounter issues while installing the 'surprise' library, such as a build error,
@@ -26,8 +14,9 @@ Functions:
 # 2. During installation, ensure you select the "Desktop development with C++" workload.
 # 3. After installation, restart your system and try running the script again.
 
-# Note: If you experience issues while running the 'surprise' library due to a NumPy incompatibility,
-# it may be because the current version of NumPy (2.x) is not supported. To fix this issue:
+# Note: If you experience issues while running the 'surprise' library due to a
+# NumPy incompatibility, it may be because the current version of NumPy (2.x) is not supported.
+# To fix this issue:
 # 1. Downgrade NumPy to a version below 2.0 by running:
 #    pip install "numpy<2"
 # 2. Ensure all dependencies in your project are updated and compatible.
@@ -46,6 +35,9 @@ LIBRARIES = [
     "matplotlib",  # Plotting and visualization
     "seaborn",  # Advanced visualizations
     "pytest",  # Automated testing
+    "tabulate",
+    "textblob",  # Text processing
+    "nltk",  # Natural Language Toolkit
 ]
 
 
@@ -107,7 +99,8 @@ def create_requirements_file(env_name: str) -> None:
 
 def main() -> None:
     """
-    Main function to create a virtual environment, install libraries, and generate the requirements file.
+    Main function to create a virtual environment, install libraries, and
+    generate the requirements file.
     """
     env_name = "venv"
 
