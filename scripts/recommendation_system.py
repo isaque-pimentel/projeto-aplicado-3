@@ -15,7 +15,7 @@ import sqlite3
 from collections import defaultdict
 
 import pandas as pd
-from helpers import perform_cross_validation
+from scripts.helpers import perform_cross_validation
 from surprise import SVD, Dataset, Reader, accuracy
 from surprise.model_selection import train_test_split
 

@@ -11,7 +11,7 @@ import logging
 import os
 import sqlite3
 import pandas as pd
-from helpers import (
+from scripts.helpers import (
     print_table,
     validate_data,
     load_model,

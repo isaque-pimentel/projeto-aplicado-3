@@ -13,14 +13,15 @@ import os
 import sqlite3
 
 import pandas as pd
-from helpers import (
+from surprise import SVD, Dataset, Reader
+
+from scripts.helpers import (
+    calculate_content_similarity,
+    calculate_sentiment_scores,
     get_movie_details,
     perform_cross_validation,
     save_model,
-    calculate_sentiment_scores,
-    calculate_content_similarity,
 )
-from surprise import SVD, Dataset, Reader
 
 LOG_FILE = "hybrid_recommendation_system.log"
 
@@ -122,7 +123,7 @@ def train_and_save_hybrid_model(
 
     # # Calculate sentiment scores
     # movies_df = calculate_sentiment_scores(movies_df, reviews_df)
-    
+
     # Calculate content-based similarity
     similarity_df = calculate_content_similarity(movies_df, method=similarity_method)
 
