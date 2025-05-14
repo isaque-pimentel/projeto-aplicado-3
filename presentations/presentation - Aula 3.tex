@@ -1,0 +1,170 @@
+\documentclass{beamer}
+
+\usetheme{Madrid}
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+\title[HistFlix: Sistema de Recomendação Híbrido]{HistFlix: Um Sistema de Recomendação Híbrido Personalizado para Filmes e Documentários Históricos}
+\author{Bruno Baltuilhe, Isaque Pimentel, Kelly Graziely Pena}
+\institute{Universidade Presbiteriana Mackenzie}
+\date{\today}
+
+\begin{document}
+
+% Slide de Título
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% Slide 1: Introdução
+\begin{frame}{Introdução}
+    \textbf{HistFlix:} Um sistema de recomendação projetado para sugerir filmes e documentários históricos com base nas preferências e emoções dos usuários.
+    \vspace{0.5cm}
+    \begin{itemize}
+        \item Combina filtragem colaborativa e filtragem baseada em conteúdo.
+        \item Integra análise de sentimentos para personalizar recomendações.
+        \item Objetiva melhorar o aprendizado e o engajamento com conteúdos históricos.
+    \end{itemize}
+\end{frame}
+
+% Slide 2: Problema
+\begin{frame}{Problema}
+    \textbf{Desafios em Sistemas de Recomendação:}
+    \begin{itemize}
+        \item Problema do novo usuário: Falta de dados para novos usuários ou itens.
+        \item Personalização limitada: Recomendações genéricas não capturam emoções dos usuários.
+        \item Foco educacional: Necessidade de um sistema voltado para conteúdos históricos e educacionais.
+    \end{itemize}
+    \vspace{0.5cm}
+    \textbf{Objetivo:} Desenvolver um sistema de recomendação híbrido que combine filtragem colaborativa, baseada em conteúdo e análise de sentimentos.
+\end{frame}
+
+% Slide 3: Conjunto de Dados
+\begin{frame}{Conjunto de Dados}
+    \textbf{Conjunto de Dados MovieLens 1M:}
+    \begin{itemize}
+        \item 1 milhão de avaliações de 6.000 usuários em 4.000 filmes.
+        \item Inclui metadados como gêneros, títulos e anos de lançamento.
+    \end{itemize}
+    \vspace{0.5cm}
+    \textbf{Dados Adicionais:}
+    \begin{itemize}
+        \item Integrado com a API TMDB para obter:
+        \begin{itemize}
+            \item Sinopse dos filmes.
+            \item Lista de atores.
+            \item Avaliações de usuários.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+% Slide 4: Metodologia
+\begin{frame}{Metodologia}
+    \textbf{Sistema de Recomendação Híbrido:}
+    \begin{itemize}
+        \item \textbf{Filtragem Colaborativa:} Utiliza SVD (Decomposição em Valores Singulares) para prever avaliações de usuários com base em usuários semelhantes.
+        \item \textbf{Filtragem Baseada em Conteúdo:} Calcula similaridade usando:
+        \begin{itemize}
+            \item Gêneros, títulos e anos de lançamento.
+            \item Pontuações de sentimentos das avaliações dos usuários.
+        \end{itemize}
+        \item \textbf{Modelo Híbrido:} Combina pontuações colaborativas e baseadas em conteúdo:
+        \[
+        \text{Pontuação Híbrida} = \alpha \cdot \text{Pontuação CF} + (1 - \alpha) \cdot \text{Pontuação CB}
+        \]
+    \end{itemize}
+\end{frame}
+
+% Slide 5: Análise de Sentimentos
+\begin{frame}{Análise de Sentimentos}
+    \textbf{Integração de Sentimentos:}
+    \begin{itemize}
+        \item Avaliações de usuários analisadas usando TextBlob.
+        \item Pontuações de polaridade variam de -1 (negativo) a +1 (positivo).
+        \item Pontuações de sentimentos incluídas no cálculo de similaridade de conteúdo.
+    \end{itemize}
+    \vspace{0.5cm}
+    \textbf{Exemplo:}
+    \begin{itemize}
+        \item Sentimento positivo: Recomendar gêneros inspiradores (e.g., Comédia, Aventura).
+        \item Sentimento negativo: Recomendar gêneros reflexivos (e.g., Drama, Romance).
+    \end{itemize}
+\end{frame}
+
+% Slide 6: Arquitetura do Sistema
+\begin{frame}{Arquitetura do Sistema}
+    \includegraphics[width=\textwidth]{system_architecture.png}
+    \vspace{0.5cm}
+    \textbf{Componentes Principais:}
+    \begin{itemize}
+        \item Pré-processamento e enriquecimento de dados (API TMDB).
+        \item Filtragem colaborativa (SVD).
+        \item Filtragem baseada em conteúdo (matriz de similaridade).
+        \item Análise de sentimentos (TextBlob).
+    \end{itemize}
+\end{frame}
+
+% Slide 7: Resultados
+\begin{frame}{Resultados}
+    \textbf{Métricas de Avaliação:}
+    \begin{itemize}
+        \item \textbf{RMSE:} 0.87 (quanto menor, melhor).
+        \item \textbf{Precisão@10:} 0.82.
+        \item \textbf{Revocação@10:} 0.68.
+        \item \textbf{F1-Score:} 0.74.
+    \end{itemize}
+    \vspace{0.5cm}
+    \textbf{Feedback dos Usuários:}
+    \begin{itemize}
+        \item Sentimento positivo para recomendações personalizadas.
+        \item Maior engajamento com conteúdos históricos.
+    \end{itemize}
+\end{frame}
+
+% Slide 8: Exemplos de Recomendações
+\begin{frame}{Exemplos de Recomendações}
+    \textbf{Entrada do Usuário:} "Estou feliz e quero assistir algo inspirador."
+    \vspace{0.5cm}
+    \textbf{Principais Recomendações:}
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Título} & \textbf{Gêneros} \\
+        \midrule
+        À Procura da Felicidade & Drama \\
+        Gênio Indomável & Drama, Romance \\
+        Forrest Gump & Drama, Comédia \\
+        \bottomrule
+    \end{tabular}
+\end{frame}
+
+% Slide 9: Desafios e Trabalhos Futuros
+\begin{frame}{Desafios e Trabalhos Futuros}
+    \textbf{Desafios:}
+    \begin{itemize}
+        \item Problema do novo usuário para novos itens e usuários.
+        \item Disponibilidade limitada de avaliações de alta qualidade.
+    \end{itemize}
+    \vspace{0.5cm}
+    \textbf{Trabalhos Futuros:}
+    \begin{itemize}
+        \item Expandir o conjunto de dados para incluir mais filmes e usuários.
+        \item Melhorar a análise de sentimentos com modelos avançados de PLN (e.g., BERT).
+        \item Desenvolver uma interface amigável para recomendações em tempo real.
+    \end{itemize}
+\end{frame}
+
+% Slide 10: Conclusão
+\begin{frame}{Conclusão}
+    \textbf{Principais Conclusões:}
+    \begin{itemize}
+        \item HistFlix combina filtragem colaborativa, baseada em conteúdo e análise de sentimentos.
+        \item Oferece recomendações personalizadas e emocionalmente conscientes.
+        \item Objetiva melhorar o aprendizado e o engajamento com conteúdos históricos.
+    \end{itemize}
+    \vspace{0.5cm}
+    \textbf{Obrigado!}
+    \vspace{0.5cm}
+    Perguntas?
+\end{frame}
+
+\end{document}
