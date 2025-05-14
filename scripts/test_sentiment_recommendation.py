@@ -13,10 +13,7 @@ import sqlite3
 import pandas as pd
 from textblob import TextBlob
 from helpers import load_model, print_table
-from hybrid_recommendation_system import (
-    calculate_content_similarity,
-    calculate_hybrid_scores,
-)
+
 
 LOG_FILE = "test_hybrid_recommendation.log"
 
