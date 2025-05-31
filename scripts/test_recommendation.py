@@ -11,7 +11,7 @@ import logging
 import os
 import sqlite3
 import pandas as pd
-from scripts.helpers import (
+from helpers import (
     print_table,
     validate_data,
     load_model,
@@ -106,15 +106,15 @@ def compare_real_and_predicted_ratings(
 
 if __name__ == "__main__":
     logging.info("Starting the interactive recommendation testing script.")
-
     try:
         # Paths
         project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        model_path = os.path.join(project_dir, "models", "svd_model_movielens_1m.pkl")
+        model_paths = [
+            os.path.join(project_dir, "models", "svd_movielens_1m_with_recency.pkl"),
+            os.path.join(project_dir, "models", "svd_movielens_1m_without_recency.pkl"),
+        ]
+        model_labels = ["With Recency", "Without Recency"]
         db_path = os.path.join(project_dir, "dataset", "sqlite", "movielens_1m.db")
-
-        # Load the trained model
-        algo = load_model(model_path)
 
         # Load the ratings, users, and movies data
         conn = sqlite3.connect(db_path)
@@ -135,19 +135,19 @@ if __name__ == "__main__":
         user_details = get_user_details(user_id, users_df)
         print_table(pd.DataFrame([user_details]), "User Details")
 
-        # Compare real and predicted ratings
-        comparisons_df = compare_real_and_predicted_ratings(
-            algo, ratings_df, movies_df, user_id
-        )
-        print_table(comparisons_df, "Real vs Predicted Ratings")
-
-        # Generate and display recommendations
-        top_n = get_top_n_recommendations(algo, ratings_df, movies_df, user_id, n=10)
-
-        # Generate and display recommendations
-        top_n = get_top_n_recommendations(algo, ratings_df, movies_df, user_id, n=10)
-        recommendations_df = pd.DataFrame(top_n)
-        print_table(recommendations_df, "Top 10 Recommendations")
-
+        # For each model, compare and display results
+        for model_path, label in zip(model_paths, model_labels):
+            print(f"\n===== Results for Model: {label} =====")
+            # Load the trained model
+            algo = load_model(model_path)
+            # Compare real and predicted ratings
+            comparisons_df = compare_real_and_predicted_ratings(
+                algo, ratings_df, movies_df, user_id
+            )
+            print_table(comparisons_df, f"Real vs Predicted Ratings ({label})")
+            # Generate and display recommendations
+            top_n = get_top_n_recommendations(algo, ratings_df, movies_df, user_id, n=10)
+            recommendations_df = pd.DataFrame(top_n)
+            print_table(recommendations_df, f"Top 10 Recommendations ({label})")
     except Exception as e:
         logging.critical("Interactive testing failed: %s", e, exc_info=True)
