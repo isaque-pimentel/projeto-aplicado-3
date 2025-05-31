@@ -137,6 +137,20 @@ def filter_noise_outliers(ratings_df, min_user_ratings=10, min_item_ratings=10):
     return filtered.reset_index(drop=True)
 
 
+def filter_outlier_users_items(ratings_df, user_var_threshold=0.01, item_var_threshold=0.01):
+    """
+    Removes users with near-zero rating variance and items with near-zero rating variance.
+    """
+    user_var = ratings_df.groupby('UserID')['Rating'].var()
+    valid_users = user_var[user_var > user_var_threshold].index
+    item_var = ratings_df.groupby('MovieID')['Rating'].var()
+    valid_items = item_var[item_var > item_var_threshold].index
+    filtered = ratings_df[
+        ratings_df['UserID'].isin(valid_users) & ratings_df['MovieID'].isin(valid_items)
+    ]
+    return filtered.reset_index(drop=True)
+
+
 def time_based_split(ratings_df, test_ratio=0.2):
     """
     Chronologically splits ratings_df into train and test sets.
@@ -236,6 +250,7 @@ def train_and_evaluate_svd(
     # Preprocess
     ratings_df = preprocess_with_timestamp(ratings_df)
     ratings_df = filter_noise_outliers(ratings_df)
+    ratings_df = filter_outlier_users_items(ratings_df)
     if apply_recency:
         ratings_df = soft_weight_by_recency(ratings_df, decay_rate=0.01)
     # Time-based split
