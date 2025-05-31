@@ -10,6 +10,7 @@ is saved for later use.
 
 import logging
 import os
+import pickle
 import sqlite3
 
 import numpy as np
@@ -293,6 +294,58 @@ def cold_start_item_recommendations(item_id, ratings_df, similarity_df, k=10):
     return list(user_activity.index[:k])
 
 
+def save_similarity_matrix(similarity_df, path):
+    similarity_df.to_pickle(path)
+
+def load_similarity_matrix(path):
+    return pd.read_pickle(path)
+
+# Use a simple alpha: 1.0 for new users, else fixed (cheaper than dynamic)
+def get_alpha(user_id, ratings_df, cold_start_threshold=5, default_alpha=0.7):
+    n_ratings = len(ratings_df[ratings_df['UserID'] == user_id])
+    return 1.0 if n_ratings <= cold_start_threshold else default_alpha
+
+# Precompute and cache recommendations for all users
+def precompute_recommendations(svd_model, ratings_df, similarity_df, users, items, k=10, alpha=0.7, cache_path="models/user_recommendations.pkl"):
+    hybrid_scores = []
+    for user_id in users:
+        user_rated = set(ratings_df[ratings_df['UserID'] == user_id]['MovieID'])
+        for movie_id in items:
+            if movie_id in user_rated:
+                continue
+            cf_score = svd_model.predict(user_id, movie_id).est
+            cb_score = 0
+            for rated_movie_id in user_rated:
+                cb_score += similarity_df.loc[movie_id, rated_movie_id]
+            cb_score /= len(user_rated) if user_rated else 1
+            a = get_alpha(user_id, ratings_df, default_alpha=alpha)
+            hybrid_score = a * cf_score + (1 - a) * cb_score
+            hybrid_scores.append((user_id, movie_id, hybrid_score))
+    # Build recommendations dict
+    from collections import defaultdict
+    user_scores = defaultdict(list)
+    for user_id, movie_id, score in hybrid_scores:
+        user_scores[user_id].append((movie_id, score))
+    recommendations = {}
+    for uid in users:
+        ranked = sorted(user_scores[uid], key=lambda x: x[1], reverse=True)
+        recommendations[uid] = [mid for mid, _ in ranked[:k]]
+    # Save to disk
+    import pickle
+    with open(cache_path, "wb") as f:
+        pickle.dump(recommendations, f)
+    return recommendations
+
+# For cold-start: cache most popular items
+def cache_popular_items(ratings_df, movies_df, k=10, cache_path="models/popular_items.pkl"):
+    item_popularity = ratings_df['MovieID'].value_counts()
+    popular_items = [iid for iid in item_popularity.index if iid in set(movies_df['MovieID'])][:k]
+    import pickle
+    with open(cache_path, "wb") as f:
+        pickle.dump(popular_items, f)
+    return popular_items
+
+
 if __name__ == "__main__":
     logging.info("Starting the hybrid recommendation system evaluation pipeline.")
     try:
@@ -308,62 +361,38 @@ if __name__ == "__main__":
         conn.close()
         # Specify the similarity method (count or tfidf)
         similarity_method = "tfidf"  # or "count"
-        # Calculate content-based similarity
-        similarity_df = calculate_content_similarity(movies_df, method=similarity_method)
-        # Tune alpha and similarity method
-        best_alpha = 0.7
-        best_sim_method = similarity_method
-        best_metric = -1
-        for alpha in np.arange(0.1, 1.05, 0.1):
-            for sim_method in ["tfidf", "count"]:
-                sim_df = calculate_content_similarity(movies_df, method=sim_method)
-                # Load pretrained SVD model (with recency for tfidf, without for count as example)
-                if sim_method == "tfidf":
-                    svd_model = load_model(model_path_with)
-                else:
-                    svd_model = load_model(model_path_without)
-                # Use dynamic alpha
-                hybrid_scores = calculate_hybrid_scores(
-                    svd_model, ratings_df, sim_df,
-                    alpha_func=lambda uid, df: alpha
-                )
-                # Evaluate on a holdout set (here, use all ratings for simplicity)
-                users = ratings_df['UserID'].unique()
-                items = ratings_df['MovieID'].unique()
-                recommendations = recommend_top_k(hybrid_scores, users, items, k=10)
-                # Use coverage as main metric for tuning (could use others)
-                coverage = get_coverage(recommendations, items)
-                if coverage > best_metric:
-                    best_metric = coverage
-                    best_alpha = alpha
-                    best_sim_method = sim_method
-        logging.info(f"Best alpha: {best_alpha}, Best similarity method: {best_sim_method}, Best coverage: {best_metric:.4f}")
-        # Final hybrid model with best params
-        similarity_df = calculate_content_similarity(movies_df, method=best_sim_method)
-        svd_model = load_model(model_path_with if best_sim_method=="tfidf" else model_path_without)
-        hybrid_scores = calculate_hybrid_scores(
-            svd_model, ratings_df, similarity_df,
-            alpha_func=lambda uid, df: best_alpha if len(ratings_df[ratings_df['UserID']==uid])>5 else 1.0
-        )
+        # Load or compute similarity matrix
+        sim_path = f"models/content_similarity_{similarity_method}.pkl"
+        if os.path.exists(sim_path):
+            similarity_df = load_similarity_matrix(sim_path)
+        else:
+            similarity_df = calculate_content_similarity(movies_df, method=similarity_method)
+            save_similarity_matrix(similarity_df, sim_path)
+        # Load SVD model (choose best)
+        svd_model = load_model(model_path_with)
         users = ratings_df['UserID'].unique()
         items = ratings_df['MovieID'].unique()
-        recommendations = recommend_top_k(hybrid_scores, users, items, k=10)
-        # Post-processing: diversity/novelty reranking and metrics
-        item_popularity = Counter(ratings_df['MovieID'])
-        item_similarity = {(i, j): similarity_df.loc[i, j] if i in similarity_df.index and j in similarity_df.columns else 0 for i in items for j in items if i != j}
-        reranked_recommendations = rerank_for_diversity_novelty(recommendations, item_similarity, item_popularity, lambda_div=0.5, lambda_nov=0.5)
-        coverage = get_coverage(reranked_recommendations, items)
-        diversity = get_diversity(reranked_recommendations, item_similarity)
-        novelty = get_novelty(reranked_recommendations, item_popularity)
-        logging.info(f"Final Hybrid Coverage: {coverage:.4f}, Diversity: {diversity:.4f}, Novelty: {novelty:.2f}")
-        # Example: handle cold-start for a new user
+        # Precompute and cache recommendations
+        rec_cache_path = "models/user_recommendations.pkl"
+        if os.path.exists(rec_cache_path):
+            with open(rec_cache_path, "rb") as f:
+                recommendations = pickle.load(f)
+        else:
+            recommendations = precompute_recommendations(svd_model, ratings_df, similarity_df, users, items, k=10, alpha=0.7, cache_path=rec_cache_path)
+        # Cache popular items for cold-start
+        pop_cache_path = "models/popular_items.pkl"
+        if os.path.exists(pop_cache_path):
+            with open(pop_cache_path, "rb") as f:
+                popular_items = pickle.load(f)
+        else:
+            popular_items = cache_popular_items(ratings_df, movies_df, k=10, cache_path=pop_cache_path)
+        # Example: get recommendations for a user
+        example_user = users[0]
+        user_recs = recommendations.get(example_user, popular_items)
+        logging.info(f"Recommendations for user {example_user}: {user_recs}")
+        # Example: cold-start for new user
         new_user_id = max(users) + 1
-        cold_recs = cold_start_recommendations(new_user_id, movies_df, ratings_df, similarity_df, k=10)
-        logging.info(f"Cold-start recommendations for new user: {cold_recs}")
-        # Example: handle cold-start for a new item
-        new_item_id = max(items) + 1
-        cold_item_recs = cold_start_item_recommendations(new_item_id, ratings_df, similarity_df, k=10)
-        logging.info(f"Cold-start recommendations for new item: {cold_item_recs}")
+        logging.info(f"Cold-start recommendations for new user: {popular_items}")
         logging.info("Hybrid recommendation system evaluation pipeline completed successfully.")
     except Exception as e:
         logging.critical("Pipeline failed: %s", e, exc_info=True)
