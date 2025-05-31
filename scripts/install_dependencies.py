@@ -31,7 +31,7 @@ LIBRARIES = [
     "pandas",  # Data manipulation and analysis
     "numpy",  # Mathematical operations
     "scikit-learn",  # Machine learning algorithms
-    "surprise",  # Recommendation systems
+    "scikit-surprise",  # Recommendation systems
     "matplotlib",  # Plotting and visualization
     "seaborn",  # Advanced visualizations
     "pytest",  # Automated testing
