@@ -91,11 +91,20 @@ A Análise Exploratória de Dados (EDA) foi conduzida para entender melhor o com
 
 Distribuição das Avaliações: Identificação da tendência dos usuários em dar notas mais altas e os padrões gerais de avaliação.
 
+![Distribuição das Avaliações](pictures/rating_distribution.png)
+
 Perfil dos Usuários: Análise de distribuição por gênero e faixa etária.
 
-Filmes Mais Bem Avaliados: Identificação dos filmes mais populares e melhor avaliados.
+![Perfil dos Usuários - Gênero](pictures/gender_distribution.png)
+![Perfil dos Usuários - Idade](pictures/age_distribution.png)
+
+Perfil dos Filmes: Identificação dos gßênero melhores avaliados por gênero.
+
+![Perfil dos Filmes](pictures/average_rating_by_genre_gender.png)
 
 Evolução das Avaliações: Observação do comportamento das avaliações ao longo do tempo.
+
+![Evolução das Avaliações](pictures/rating_evolution.png)
 
 A EDA impacta diretamente o sistema de recomendação, pois permite ajustar o modelo para melhor atender aos perfis de usuários e identificar padrões de consumo de conteúdo. Para a versão em produção, consideramos utilizar uma base de dados maior, como o MovieLens 10M, para aprimorar a qualidade das recomendações e garantir maior robustez ao modelo.
 
