@@ -2,7 +2,7 @@ import os
 import sqlite3
 import pandas as pd
 from scripts.helpers import load_model
-from scripts.hybrid_recommendation_system import calculate_content_similarity, calculate_hybrid_scores
+from scripts.hybrid_recommendation_system import calculate_content_similarity
 
 # Paths
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
