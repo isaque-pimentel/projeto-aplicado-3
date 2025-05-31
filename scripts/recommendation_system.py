@@ -15,7 +15,7 @@ import sqlite3
 from collections import defaultdict
 
 import pandas as pd
-from scripts.helpers import perform_cross_validation
+from helpers import perform_cross_validation, precision_recall_at_k
 from surprise import SVD, Dataset, Reader, accuracy
 from surprise.model_selection import train_test_split
 
@@ -90,42 +90,6 @@ def preprocess_with_timestamp(ratings_df: pd.DataFrame) -> pd.DataFrame:
         earliest_timestamp,
     )
     return ratings_df
-
-
-def precision_recall_at_k(predictions, k=10, threshold=3.5):
-    """
-    Calculates Precision and Recall at K.
-
-    :param predictions: List of predictions from the Surprise library.
-    :param k: Number of recommendations to consider.
-    :param threshold: Rating threshold to consider a recommendation as relevant.
-    :return: Precision and Recall at K.
-    """
-    logging.info("Calculating Precision and Recall at K.")
-    user_est_true = defaultdict(list)
-    for uid, _, true_r, est, _ in predictions:
-        user_est_true[uid].append((est, true_r))
-
-    precisions = dict()
-    recalls = dict()
-
-    for uid, user_ratings in user_est_true.items():
-        user_ratings.sort(key=lambda x: x[0], reverse=True)
-        top_k = user_ratings[:k]
-
-        n_rel = sum((true_r >= threshold) for (_, true_r) in user_ratings)
-        n_rec_k = sum((est >= threshold) for (est, _) in top_k)
-        n_rel_and_rec_k = sum(
-            ((true_r >= threshold) and (est >= threshold)) for (est, true_r) in top_k
-        )
-
-        precisions[uid] = n_rel_and_rec_k / n_rec_k if n_rec_k != 0 else 0
-        recalls[uid] = n_rel_and_rec_k / n_rel if n_rel != 0 else 0
-
-    avg_precision = sum(precisions.values()) / len(precisions)
-    avg_recall = sum(recalls.values()) / len(recalls)
-    logging.info("Precision@K: %.4f, Recall@K: %.4f", avg_precision, avg_recall)
-    return avg_precision, avg_recall
 
 
 def save_model(algo, model_path: str) -> None:
