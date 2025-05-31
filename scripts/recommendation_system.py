@@ -223,17 +223,16 @@ def svd_grid_search(data):
     return gs.best_estimator["rmse"], gs.best_params["rmse"]
 
 
-def train_and_evaluate_svd(ratings_df: pd.DataFrame, model_path: str, apply_recency: bool = True) -> None:
+def train_and_evaluate_svd(
+    ratings_df: pd.DataFrame, model_path: str, apply_recency: bool = True
+) -> dict:
     """
     Trains and evaluates an SVD-based recommendation system using temporal information.
-
-    :param ratings_df: DataFrame containing the ratings data with a Timestamp column.
-    :param model_path: Path to save the trained model.
+    Returns a dictionary of evaluation metrics for comparison.
     """
     logging.info(
         "Starting training and evaluation of SVD-based recommendation system with temporal information."
     )
-
     # Preprocess
     ratings_df = preprocess_with_timestamp(ratings_df)
     ratings_df = filter_noise_outliers(ratings_df)
@@ -274,32 +273,59 @@ def train_and_evaluate_svd(ratings_df: pd.DataFrame, model_path: str, apply_rece
         diversity,
         novelty,
     )
+    return {
+        "RMSE": rmse,
+        "Precision@10": precision,
+        "Recall@10": recall,
+        "Coverage": coverage,
+        "Diversity": diversity,
+        "Novelty": novelty,
+        "BestParams": best_params
+    }
+
+
+def compare_models(ratings_df, model_path_with, model_path_without):
+    """
+    Trains, saves, and compares models with and without recency weighting.
+    Logs and prints their evaluation metrics.
+    """
+    logging.info("Training model WITH recency weighting...")
+    metrics_with = train_and_evaluate_svd(
+        ratings_df.copy(), model_path_with, apply_recency=True
+    )
+    logging.info("Training model WITHOUT recency weighting...")
+    metrics_without = train_and_evaluate_svd(
+        ratings_df.copy(), model_path_without, apply_recency=False
+    )
+    # Print comparison
+    print("Model Comparison:")
+    print("With Recency:", metrics_with)
+    print("Without Recency:", metrics_without)
+    # Save to CSV for tracking
+    df = pd.DataFrame([metrics_with, metrics_without], index=["With Recency", "Without Recency"])
+    df.to_csv("model_comparison.csv")
+    logging.info("Model comparison saved to model_comparison.csv")
 
 
 if __name__ == "__main__":
     logging.info("Starting the recommendation system pipeline.")
-
     try:
         # Path to the SQLite database
         project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         db_path = os.path.join(project_dir, "dataset", "sqlite", "movielens_1m.db")
-        model_path = os.path.join(
-            project_dir, "models", "svd_recency_model_movielens_1m.pkl"
-        )
-
+        model_path_with = os.path.join(project_dir, "models", "svd_movielens_1m_with_recency.pkl")
+        model_path_without = os.path.join(project_dir, "models", "svd_movielens_1m_without_recency.pkl")
         logging.debug(
-            "Project directory: %s, DB path: %s, Model path: %s",
+            "Project directory: %s, DB path: %s, Model path (with recency): %s, Model path (without recency): %s",
             project_dir,
             db_path,
-            model_path,
+            model_path_with,
+            model_path_without,
         )
-
         # Load the ratings data
         ratings_df = load_data_from_sqlite(db_path)
-
-        # Train and evaluate the recommendation system with temporal information
-        train_and_evaluate_svd(ratings_df, model_path, apply_recency=True)
-
+        # Train, save, and compare both models
+        compare_models(ratings_df, model_path_with, model_path_without)
         logging.info("Recommendation system pipeline completed successfully.")
     except Exception as e:
         logging.critical("Pipeline failed: %s", e, exc_info=True)
