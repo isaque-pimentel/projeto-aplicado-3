@@ -12,12 +12,13 @@ import logging
 import os
 import pickle
 import sqlite3
-from collections import defaultdict
+from collections import defaultdict, Counter
 
+import numpy as np
 import pandas as pd
 from helpers import perform_cross_validation, precision_recall_at_k
 from surprise import SVD, Dataset, Reader, accuracy
-from surprise.model_selection import train_test_split
+from surprise.model_selection import GridSearchCV
 
 LOG_FILE = "recommendation_system.log"
 
@@ -109,7 +110,120 @@ def save_model(algo, model_path: str) -> None:
         raise
 
 
-def train_and_evaluate_svd_with_timestamp(ratings_df: pd.DataFrame, model_path: str):
+def soft_weight_by_recency(ratings_df, decay_rate=0.01):
+    """
+    Assigns a soft weight to each rating using exponential decay based on recency.
+    Returns a DataFrame sampled according to these weights.
+    """
+    max_recency = ratings_df["Recency"].max()
+    weights = np.exp(decay_rate * (ratings_df["Recency"] - max_recency))
+    weights = weights / weights.sum()
+    sampled_idx = np.random.choice(
+        ratings_df.index, size=len(ratings_df), replace=True, p=weights
+    )
+    return ratings_df.loc[sampled_idx].reset_index(drop=True)
+
+
+def filter_noise_outliers(ratings_df, min_user_ratings=10, min_item_ratings=10):
+    """
+    Removes users and items with very few ratings.
+    """
+    user_counts = ratings_df["UserID"].value_counts()
+    item_counts = ratings_df["MovieID"].value_counts()
+    filtered = ratings_df[
+        ratings_df["UserID"].isin(user_counts[user_counts >= min_user_ratings].index)
+        & ratings_df["MovieID"].isin(item_counts[item_counts >= min_item_ratings].index)
+    ]
+    return filtered.reset_index(drop=True)
+
+
+def time_based_split(ratings_df, test_ratio=0.2):
+    """
+    Chronologically splits ratings_df into train and test sets.
+    """
+    ratings_df = ratings_df.sort_values("Timestamp")
+    split_idx = int(len(ratings_df) * (1 - test_ratio))
+    train = ratings_df.iloc[:split_idx]
+    test = ratings_df.iloc[split_idx:]
+    return train.reset_index(drop=True), test.reset_index(drop=True)
+
+
+def get_coverage(recommendations, all_items):
+    """
+    Percentage of unique items recommended at least once.
+    """
+    recommended_items = set([iid for recs in recommendations.values() for iid in recs])
+    return len(recommended_items) / len(all_items)
+
+
+def get_diversity(recommendations, item_similarity):
+    """
+    Diversity: average pairwise dissimilarity among recommended items (1 - similarity).
+    item_similarity: dict of (item1, item2) -> similarity (0-1)
+    """
+    diversities = []
+    for recs in recommendations.values():
+        if len(recs) < 2:
+            continue
+        pairs = [(recs[i], recs[j]) for i in range(len(recs)) for j in range(i + 1, len(recs))]
+        dissimilarities = [1 - item_similarity.get((a, b), 0) for a, b in pairs]
+        if dissimilarities:
+            diversities.append(np.mean(dissimilarities))
+    return np.mean(diversities) if diversities else 0
+
+
+def get_novelty(recommendations, item_popularity):
+    """
+    Novelty: average popularity rank of recommended items (lower is less novel).
+    item_popularity: dict of item -> count
+    """
+    all_counts = np.array(list(item_popularity.values()))
+    ranks = {iid: (all_counts > item_popularity[iid]).sum() + 1 for iid in item_popularity}
+    novelty_scores = []
+    for recs in recommendations.values():
+        novelty_scores += [ranks.get(iid, 0) for iid in recs]
+    return np.mean(novelty_scores) if novelty_scores else 0
+
+
+def recommend_top_k(algo, users, items, k=10):
+    """
+    For each user, recommend top-k items not yet rated.
+    Returns: dict user -> list of item ids
+    """
+    recommendations = {}
+    for uid in users:
+        user_items = set(items)
+        # Remove items already rated by user
+        # (Assume you have a ratings_df in scope)
+        rated = set(ratings_df[ratings_df["UserID"] == uid]["MovieID"])
+        candidates = list(user_items - rated)
+        preds = [(iid, algo.predict(uid, iid).est) for iid in candidates]
+        top_k = sorted(preds, key=lambda x: x[1], reverse=True)[:k]
+        recommendations[uid] = [iid for iid, _ in top_k]
+    return recommendations
+
+
+def svd_grid_search(data):
+    """
+    Performs grid search to find the best SVD hyperparameters.
+    Returns the best algorithm and the best parameters.
+    """
+    param_grid = {
+        "n_factors": [50, 100, 150],
+        "lr_all": [0.002, 0.005, 0.01],
+        "reg_all": [0.02, 0.05, 0.1],
+        "n_epochs": [20, 30, 40],
+    }
+    gs = GridSearchCV(
+        SVD, param_grid, measures=["rmse"], cv=3, n_jobs=4, joblib_verbose=1
+    )
+    gs.fit(data)
+    logging.info("Best RMSE score from grid search: %.4f" % gs.best_score["rmse"])
+    logging.info("Best SVD parameters: %s" % gs.best_params["rmse"])
+    return gs.best_estimator["rmse"], gs.best_params["rmse"]
+
+
+def train_and_evaluate_svd(ratings_df: pd.DataFrame, model_path: str, apply_recency: bool = True) -> None:
     """
     Trains and evaluates an SVD-based recommendation system using temporal information.
 
@@ -120,42 +234,46 @@ def train_and_evaluate_svd_with_timestamp(ratings_df: pd.DataFrame, model_path: 
         "Starting training and evaluation of SVD-based recommendation system with temporal information."
     )
 
-    # Preprocess the data to include temporal information
+    # Preprocess
     ratings_df = preprocess_with_timestamp(ratings_df)
-
-    # Prepare the data for Surprise
-    reader = Reader(
-        rating_scale=(ratings_df["Rating"].min(), ratings_df["Rating"].max())
-    )
-    data = Dataset.load_from_df(ratings_df[["UserID", "MovieID", "Rating"]], reader)
-
-    # Split the data into training and testing sets
-    trainset, testset = train_test_split(data, test_size=0.2, random_state=42)
-
-    # Train the SVD model
-    algo = SVD()
-    algo.fit(trainset)
-    logging.info("SVD model trained successfully.")
-
-    # Evaluate the model on the test set
-    predictions = algo.test(testset)
+    ratings_df = filter_noise_outliers(ratings_df)
+    if apply_recency:
+        ratings_df = soft_weight_by_recency(ratings_df, decay_rate=0.01)
+    # Time-based split
+    train_df, test_df = time_based_split(ratings_df, test_ratio=0.2)
+    reader = Reader(rating_scale=(ratings_df["Rating"].min(), ratings_df["Rating"].max()))
+    train_data = Dataset.load_from_df(train_df[["UserID", "MovieID", "Rating"]], reader)
+    testset = list(test_df[["UserID", "MovieID", "Rating"]].itertuples(index=False, name=None))
+    # Grid search for best SVD hyperparameters
+    best_algo, best_params = svd_grid_search(train_data)
+    trainset = train_data.build_full_trainset()
+    best_algo.fit(trainset)
+    logging.info(f"SVD model trained with best params: {best_params}")
+    # Evaluate
+    predictions = best_algo.test(testset)
     rmse = accuracy.rmse(predictions)
     logging.info("RMSE on test set: %.4f", rmse)
-
-    # Perform cross-validation and track the best model
-    best_model, best_rmse = perform_cross_validation(data, kfolds=5)
-    logging.info("Best RMSE from cross-validation: %.4f", best_rmse)
-
     # Save the best-performing model
-    if best_model:
-        save_model(best_model, model_path)
-        logging.info("Best-performing model saved to %s", model_path)
-
+    save_model(best_algo, model_path)
+    logging.info("Best-performing model saved to %s", model_path)
     # Calculate Precision and Recall at K for the best model
-    if best_model:
-        predictions = best_model.test(testset)
-        precision, recall = precision_recall_at_k(predictions, k=10, threshold=3.5)
-        logging.info("Precision@10: %.4f, Recall@10: %.4f", precision, recall)
+    precision, recall = precision_recall_at_k(predictions, k=10, threshold=3.5)
+    logging.info("Precision@10: %.4f, Recall@10: %.4f", precision, recall)
+    # Additional metrics
+    users = test_df["UserID"].unique()
+    items = ratings_df["MovieID"].unique()
+    item_popularity = Counter(train_df["MovieID"])
+    item_similarity = {(i, j): 0 for i in items for j in items if i != j}
+    recommendations = recommend_top_k(best_algo, users, items, k=10)
+    coverage = get_coverage(recommendations, items)
+    diversity = get_diversity(recommendations, item_similarity)
+    novelty = get_novelty(recommendations, item_popularity)
+    logging.info(
+        "Coverage: %.4f, Diversity: %.4f, Novelty: %.2f",
+        coverage,
+        diversity,
+        novelty,
+    )
 
 
 if __name__ == "__main__":
@@ -165,7 +283,9 @@ if __name__ == "__main__":
         # Path to the SQLite database
         project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         db_path = os.path.join(project_dir, "dataset", "sqlite", "movielens_1m.db")
-        model_path = os.path.join(project_dir, "models", "svd_model_movielens_1m.pkl")
+        model_path = os.path.join(
+            project_dir, "models", "svd_recency_model_movielens_1m.pkl"
+        )
 
         logging.debug(
             "Project directory: %s, DB path: %s, Model path: %s",
@@ -178,7 +298,7 @@ if __name__ == "__main__":
         ratings_df = load_data_from_sqlite(db_path)
 
         # Train and evaluate the recommendation system with temporal information
-        train_and_evaluate_svd_with_timestamp(ratings_df, model_path)
+        train_and_evaluate_svd(ratings_df, model_path, apply_recency=True)
 
         logging.info("Recommendation system pipeline completed successfully.")
     except Exception as e:
