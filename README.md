@@ -114,51 +114,18 @@ A avaliação do desempenho do modelo de recomendação será realizada utilizan
 
 RMSE (Root Mean Squared Error): mede a precisão da previsão das notas, comparando-as com os valores reais fornecidos pelos usuários.
 
-<!-- MAE (Mean Absolute Error): Mede a diferença média absoluta entre as previsões do modelo e os valores reais. -->
-
 Precisão@K e Recall@K: avaliam a relevância das recomendações dentro do top-K recomendações feitas para cada usuário.
 
-<!-- Cobertura: mede a proporção do catálogo que está sendo recomendado aos usuários, garantindo diversidade.
+Cobertura: mede a proporção do catálogo que está sendo recomendado aos usuários, garantindo diversidade.
 
 Diversidade: mede a variação entre os itens recomendados para um mesmo usuário.
 
-Serendipidade: mede a capacidade do sistema de recomendar itens inesperados, mas relevantes.
-
-Tempo de Execução: avalia a eficiência computacional do modelo ao gerar recomendações. -->
 
 ## 📚 Referencial Teórico
 
 Este referencial teórico fundamenta as escolhas metodológicas e técnicas adotadas no desenvolvimento do **HistFlix**, nosso sistema de recomendação inteligente voltado à sugestão personalizada de filmes e documentários históricos, sensível ao estado emocional dos usuários. Para isso, são abordadas teorias, modelos e algoritmos amplamente utilizados em sistemas de recomendação, com base em estudos consolidados e pesquisas recentes.
 
 Além disso, esta seção contextualiza a aplicação de técnicas de Processamento de Linguagem Natural (NLP) na interpretação subjetiva das interações dos usuários e discute a sinergia entre essas abordagens. Ao reunir conceitos de filtragem colaborativa, filtragem baseada em conteúdo, modelos híbridos e análise de emoções, o referencial teórico embasa a proposta de um sistema robusto, contextual e orientado ao engajamento educacional.
-
-<!-- Sistemas de Recomendação: 
-Ferramentas para filtrar informações e prever preferências do usuário.
-Tipos principais: Filtragem Colaborativa (FC), Filtragem por Conteúdo (FCt), Sistemas Híbridos.
-Resnick, P., & Varian, H. R. (1997). "Recommender systems." Communications of the ACM, 40(3), 56-58.
-Sarwar, B., Karypis, G., Konstan, J., & Riedl, J. (2001). "Item-based collaborative filtering recommendation algorithms." In Proceedings of the 10th international conference on World Wide Web (pp. 285-295).
-
-Análise de Dados e Aprendizado de Máquina Específicos:
-Pré-processamento de Dados:
-Tratamento de dados ausentes: Imputação, remoção.
-Normalização e padronização de dados.
-Engenharia de recursos: Criação de novas variáveis relevantes.
-Aprendizado de Máquina para Recomendação:
-Algoritmos de regressão: Previsão de classificações de filmes.
-Algoritmos de classificação: Previsão de se um usuário gostará de um filme.
-Avaliação de modelos: Validação cruzada, métricas de avaliação específicas para recomendação (RMSE, MAE, precisão, recall).
-Géron, A. (2019). Hands-on machine learning with Scikit-Learn, Keras, and TensorFlow: Concepts, tools, and techniques to build intelligent systems.
-
-Bancos de Dados e Armazenamento Otimizados:
-Modelagem de dados para representar usuários, filmes e avaliações.
-Otimização de consultas SQL para recuperação eficiente de dados.
-Silberschatz, A., Korth, H. F., & Sudarshan, S. (2010). Database system concepts.
-
-Análise Exploratória de Dados (AED):
-Visualização da distribuição de avaliações, gêneros de filmes, etc.
-Identificação de padrões e insights relevantes para o sistema de recomendação.
-Apresentação de métricas de avaliação e exemplos de recomendações.
-McKinney, W. (2017). Python for data analysis: Data wrangling with Pandas, NumPy, and IPython. -->
 
 ## 🌐 Web Application (HistFlix)
 
