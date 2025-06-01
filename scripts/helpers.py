@@ -20,7 +20,7 @@ from surprise.model_selection import train_test_split
 from tabulate import tabulate
 from textblob import TextBlob
 
-
+# --- Data Validation and Loading ---
 def print_table(df: pd.DataFrame, title: str) -> None:
     """
     Prints a DataFrame in a tabular format using the tabulate library.
@@ -87,6 +87,24 @@ def load_model(model_path: str):
         raise
 
 
+def save_model(algo, model_path: str) -> None:
+    """
+    Saves the trained model to a file.
+
+    :param algo: The trained Surprise model.
+    :param model_path: Path to save the model file.
+    """
+    logging.info("Saving the trained model to %s", model_path)
+    try:
+        with open(model_path, "wb") as model_file:
+            pickle.dump(algo, model_file)
+        logging.info("Model saved successfully.")
+    except Exception as e:
+        logging.error("Failed to save the model: %s", e, exc_info=True)
+        raise
+
+
+# --- User and Movie Details ---
 def get_user_details(user_id: int, users_df: pd.DataFrame) -> dict:
     """
     Retrieves user details from the users DataFrame.
@@ -111,6 +129,7 @@ def get_movie_details(movie_id: int, movies_df: pd.DataFrame) -> dict:
     return movie_details
 
 
+# --- Recommendation Metrics ---
 def calculate_rmse(predictions) -> float:
     """
     Calculates the RMSE for a given set of predictions.
@@ -122,52 +141,6 @@ def calculate_rmse(predictions) -> float:
     rmse = accuracy.rmse(predictions, verbose=False)
     logging.info("Calculated RMSE: %.4f", rmse)
     return rmse
-
-
-def perform_cross_validation(data, kfolds: int = 5) -> tuple:
-    """
-    Performs cross-validation to find the best model based on RMSE.
-
-    :param data: Surprise Dataset object.
-    :param kfolds: Number of folds for cross-validation.
-    :return: The best model and its RMSE.
-    """
-
-    logging.info("Performing cross-validation with %d folds.", kfolds)
-    best_rmse = float("inf")
-    best_model = None
-
-    for fold in range(kfolds):
-        trainset, testset = train_test_split(data, test_size=0.2, random_state=fold)
-        algo = SVD()
-        algo.fit(trainset)
-        predictions = algo.test(testset)
-        fold_rmse = calculate_rmse(predictions)
-        logging.info("Fold %d RMSE: %.4f", fold + 1, fold_rmse)
-
-        if fold_rmse < best_rmse:
-            best_rmse = fold_rmse
-            best_model = algo
-
-    logging.info("Best RMSE from cross-validation: %.4f", best_rmse)
-    return best_model, best_rmse
-
-
-def save_model(algo, model_path: str) -> None:
-    """
-    Saves the trained model to a file.
-
-    :param algo: The trained Surprise model.
-    :param model_path: Path to save the model file.
-    """
-    logging.info("Saving the trained model to %s", model_path)
-    try:
-        with open(model_path, "wb") as model_file:
-            pickle.dump(algo, model_file)
-        logging.info("Model saved successfully.")
-    except Exception as e:
-        logging.error("Failed to save the model: %s", e, exc_info=True)
-        raise
 
 
 def precision_recall_at_k(predictions, k=10, threshold=3.5):
@@ -206,6 +179,81 @@ def precision_recall_at_k(predictions, k=10, threshold=3.5):
     return avg_precision, avg_recall
 
 
+def evaluate_recommendations(
+    recommendations: pd.DataFrame, user_ratings: pd.DataFrame, n: int = 10
+) -> dict:
+    """
+    Evaluates the quality of recommendations using Precision@N, Recall@N, and F1-Score.
+
+    :param recommendations: DataFrame containing the recommended movies.
+    :param user_ratings: DataFrame containing the user's actual ratings.
+    :param n: The number of recommendations to evaluate.
+    :return: A dictionary containing evaluation metrics.
+    """
+    logging.info("Evaluating recommendations.")
+
+    # Get the top N recommended movie IDs
+    recommended_movie_ids = recommendations["MovieID"].head(n).tolist()
+
+    # Get the relevant movie IDs (movies rated 4 or higher by the user)
+    relevant_movie_ids = user_ratings[user_ratings["Rating"] >= 4]["MovieID"].tolist()
+
+    # Calculate Precision@N
+    true_positives = len(set(recommended_movie_ids) & set(relevant_movie_ids))
+    precision_at_n = true_positives / n if n > 0 else 0
+
+    # Calculate Recall@N
+    recall_at_n = true_positives / len(relevant_movie_ids) if relevant_movie_ids else 0
+
+    # Calculate F1-Score
+    if precision_at_n + recall_at_n > 0:
+        f1_score = 2 * (precision_at_n * recall_at_n) / (precision_at_n + recall_at_n)
+    else:
+        f1_score = 0
+
+    logging.info(
+        "Evaluation Metrics - Precision@%d: %.2f, Recall@%d: %.2f, F1-Score: %.2f",
+        n,
+        precision_at_n,
+        n,
+        recall_at_n,
+        f1_score,
+    )
+
+    return {
+        "Precision@N": precision_at_n,
+        "Recall@N": recall_at_n,
+        "F1-Score": f1_score,
+    }
+
+
+def get_coverage(recommendations, all_items):
+    recommended_items = set([iid for recs in recommendations.values() for iid in recs])
+    return len(recommended_items) / len(all_items)
+
+
+def get_diversity(recommendations, item_similarity):
+    diversities = []
+    for recs in recommendations.values():
+        if len(recs) < 2:
+            continue
+        pairs = [(recs[i], recs[j]) for i in range(len(recs)) for j in range(i + 1, len(recs))]
+        dissimilarities = [1 - item_similarity.get((a, b), 0) for a, b in pairs]
+        if dissimilarities:
+            diversities.append(np.mean(dissimilarities))
+    return np.mean(diversities) if diversities else 0
+
+
+def get_novelty(recommendations, item_popularity):
+    all_counts = np.array(list(item_popularity.values()))
+    ranks = {iid: (all_counts > item_popularity[iid]).sum() + 1 for iid in item_popularity}
+    novelty_scores = []
+    for recs in recommendations.values():
+        novelty_scores += [ranks.get(iid, 0) for iid in recs]
+    return np.mean(novelty_scores) if novelty_scores else 0
+
+
+# --- Content-Based Similarity ---
 def calculate_content_similarity(
     movies_df: pd.DataFrame, method: str = "count", use_sentiment: bool = False
 ) -> pd.DataFrame:
@@ -266,6 +314,25 @@ def calculate_content_similarity(
     return similarity_df
 
 
+def apply_time_decay_to_similarity(similarity_df, movies_df, decay_rate=0.001):
+    """
+    Applies exponential time decay to content-based similarity based on movie release year (if available).
+    Assumes movies_df has columns: MovieID, Year.
+    """
+    if 'Year' not in movies_df.columns:
+        return similarity_df  # No year info, skip
+    year_dict = movies_df.set_index('MovieID')['Year'].to_dict()
+    max_year = max(year_dict.values())
+    for i in similarity_df.index:
+        for j in similarity_df.columns:
+            year_i = year_dict.get(i, max_year)
+            year_j = year_dict.get(j, max_year)
+            avg_year = (year_i + year_j) / 2
+            decay = np.exp(-decay_rate * (max_year - avg_year))
+            similarity_df.loc[i, j] *= decay
+    return similarity_df
+
+
 def calculate_sentiment_scores(
     movies_df: pd.DataFrame, reviews_df: pd.DataFrame
 ) -> pd.DataFrame:
@@ -300,54 +367,14 @@ def calculate_sentiment_scores(
     return movies_df
 
 
-def evaluate_recommendations(
-    recommendations: pd.DataFrame, user_ratings: pd.DataFrame, n: int = 10
-) -> dict:
-    """
-    Evaluates the quality of recommendations using Precision@N, Recall@N, and F1-Score.
+def save_similarity_matrix(similarity_df, path):
+    similarity_df.to_pickle(path)
 
-    :param recommendations: DataFrame containing the recommended movies.
-    :param user_ratings: DataFrame containing the user's actual ratings.
-    :param n: The number of recommendations to evaluate.
-    :return: A dictionary containing evaluation metrics.
-    """
-    logging.info("Evaluating recommendations.")
-
-    # Get the top N recommended movie IDs
-    recommended_movie_ids = recommendations["MovieID"].head(n).tolist()
-
-    # Get the relevant movie IDs (movies rated 4 or higher by the user)
-    relevant_movie_ids = user_ratings[user_ratings["Rating"] >= 4]["MovieID"].tolist()
-
-    # Calculate Precision@N
-    true_positives = len(set(recommended_movie_ids) & set(relevant_movie_ids))
-    precision_at_n = true_positives / n if n > 0 else 0
-
-    # Calculate Recall@N
-    recall_at_n = true_positives / len(relevant_movie_ids) if relevant_movie_ids else 0
-
-    # Calculate F1-Score
-    if precision_at_n + recall_at_n > 0:
-        f1_score = 2 * (precision_at_n * recall_at_n) / (precision_at_n + recall_at_n)
-    else:
-        f1_score = 0
-
-    logging.info(
-        "Evaluation Metrics - Precision@%d: %.2f, Recall@%d: %.2f, F1-Score: %.2f",
-        n,
-        precision_at_n,
-        n,
-        recall_at_n,
-        f1_score,
-    )
-
-    return {
-        "Precision@N": precision_at_n,
-        "Recall@N": recall_at_n,
-        "F1-Score": f1_score,
-    }
+def load_similarity_matrix(path):
+    return pd.read_pickle(path)
 
 
+# --- Hybrid Recommendation Utilities ---
 def get_dynamic_alpha(user_id, ratings_df, min_alpha=0.3, max_alpha=1.0, cold_start_threshold=5):
     """
     Returns a dynamic alpha for a user: alpha=1 for new users (cold start),
@@ -360,23 +387,62 @@ def get_dynamic_alpha(user_id, ratings_df, min_alpha=0.3, max_alpha=1.0, cold_st
     return alpha
 
 
-def apply_time_decay_to_similarity(similarity_df, movies_df, decay_rate=0.001):
-    """
-    Applies exponential time decay to content-based similarity based on movie release year (if available).
-    Assumes movies_df has columns: MovieID, Year.
-    """
-    if 'Year' not in movies_df.columns:
-        return similarity_df  # No year info, skip
-    year_dict = movies_df.set_index('MovieID')['Year'].to_dict()
-    max_year = max(year_dict.values())
-    for i in similarity_df.index:
-        for j in similarity_df.columns:
-            year_i = year_dict.get(i, max_year)
-            year_j = year_dict.get(j, max_year)
-            avg_year = (year_i + year_j) / 2
-            decay = np.exp(-decay_rate * (max_year - avg_year))
-            similarity_df.loc[i, j] *= decay
-    return similarity_df
+def recommend_top_k(hybrid_scores, users, items, k=10):
+    from collections import defaultdict
+    user_scores = defaultdict(list)
+    for user_id, movie_id, score in hybrid_scores:
+        user_scores[user_id].append((movie_id, score))
+    recommendations = {}
+    for uid in users:
+        rated = set([movie_id for movie_id, _ in user_scores[uid]])
+        candidates = [(mid, s) for mid, s in user_scores[uid] if mid not in rated]
+        ranked = sorted(user_scores[uid], key=lambda x: x[1], reverse=True)
+        recommendations[uid] = [mid for mid, _ in ranked[:k]]
+    return recommendations
+
+
+def precompute_recommendations(svd_model, ratings_df, similarity_df, users, items, k=10, alpha=0.7, cache_path="models/user_recommendations.pkl"):
+    hybrid_scores = []
+    for user_id in users:
+        user_rated = set(ratings_df[ratings_df['UserID'] == user_id]['MovieID'])
+        for movie_id in items:
+            if movie_id in user_rated:
+                continue
+            cf_score = svd_model.predict(user_id, movie_id).est
+            cb_score = 0
+            for rated_movie_id in user_rated:
+                cb_score += similarity_df.loc[movie_id, rated_movie_id]
+            cb_score /= len(user_rated) if user_rated else 1
+            a = get_dynamic_alpha(user_id, ratings_df, min_alpha=alpha)  # Use min_alpha for weighting
+            hybrid_score = a * cf_score + (1 - a) * cb_score
+            hybrid_scores.append((user_id, movie_id, hybrid_score))
+    user_scores = defaultdict(list)
+    for user_id, movie_id, score in hybrid_scores:
+        user_scores[user_id].append((movie_id, score))
+    recommendations = {}
+    for uid in users:
+        ranked = sorted(user_scores[uid], key=lambda x: x[1], reverse=True)
+        recommendations[uid] = [mid for mid, _ in ranked[:k]]
+    with open(cache_path, "wb") as f:
+        pickle.dump(recommendations, f)
+    return recommendations
+
+
+def cold_start_recommendations(user_id, movies_df, ratings_df, similarity_df, k=10):
+    rated = set(ratings_df[ratings_df['UserID'] == user_id]['MovieID'])
+    all_items = set(movies_df['MovieID'])
+    not_rated = list(all_items - rated)
+    item_popularity = ratings_df['MovieID'].value_counts()
+    popular_items = [iid for iid in item_popularity.index if iid in not_rated][:k]
+    if len(popular_items) < k:
+        extra = [iid for iid in not_rated if iid not in popular_items][:k-len(popular_items)]
+        popular_items += extra
+    return popular_items[:k]
+
+
+def cold_start_item_recommendations(item_id, ratings_df, similarity_df, k=10):
+    user_activity = ratings_df['UserID'].value_counts()
+    return list(user_activity.index[:k])
 
 
 def rerank_for_diversity_novelty(recommendations, item_similarity, item_popularity, lambda_div=0.5, lambda_nov=0.5):
@@ -402,104 +468,6 @@ def rerank_for_diversity_novelty(recommendations, item_similarity, item_populari
                 selected.append(best_iid)
         reranked[uid] = selected
     return reranked
-
-
-def get_coverage(recommendations, all_items):
-    recommended_items = set([iid for recs in recommendations.values() for iid in recs])
-    return len(recommended_items) / len(all_items)
-
-
-def get_diversity(recommendations, item_similarity):
-    diversities = []
-    for recs in recommendations.values():
-        if len(recs) < 2:
-            continue
-        pairs = [(recs[i], recs[j]) for i in range(len(recs)) for j in range(i + 1, len(recs))]
-        dissimilarities = [1 - item_similarity.get((a, b), 0) for a, b in pairs]
-        if dissimilarities:
-            diversities.append(np.mean(dissimilarities))
-    return np.mean(diversities) if diversities else 0
-
-
-def get_novelty(recommendations, item_popularity):
-    all_counts = np.array(list(item_popularity.values()))
-    ranks = {iid: (all_counts > item_popularity[iid]).sum() + 1 for iid in item_popularity}
-    novelty_scores = []
-    for recs in recommendations.values():
-        novelty_scores += [ranks.get(iid, 0) for iid in recs]
-    return np.mean(novelty_scores) if novelty_scores else 0
-
-
-def recommend_top_k(hybrid_scores, users, items, k=10):
-    from collections import defaultdict
-    user_scores = defaultdict(list)
-    for user_id, movie_id, score in hybrid_scores:
-        user_scores[user_id].append((movie_id, score))
-    recommendations = {}
-    for uid in users:
-        rated = set([movie_id for movie_id, _ in user_scores[uid]])
-        candidates = [(mid, s) for mid, s in user_scores[uid] if mid not in rated]
-        ranked = sorted(user_scores[uid], key=lambda x: x[1], reverse=True)
-        recommendations[uid] = [mid for mid, _ in ranked[:k]]
-    return recommendations
-
-
-def cold_start_recommendations(user_id, movies_df, ratings_df, similarity_df, k=10):
-    rated = set(ratings_df[ratings_df['UserID'] == user_id]['MovieID'])
-    all_items = set(movies_df['MovieID'])
-    not_rated = list(all_items - rated)
-    item_popularity = ratings_df['MovieID'].value_counts()
-    popular_items = [iid for iid in item_popularity.index if iid in not_rated][:k]
-    if len(popular_items) < k:
-        extra = [iid for iid in not_rated if iid not in popular_items][:k-len(popular_items)]
-        popular_items += extra
-    return popular_items[:k]
-
-
-def cold_start_item_recommendations(item_id, ratings_df, similarity_df, k=10):
-    user_activity = ratings_df['UserID'].value_counts()
-    return list(user_activity.index[:k])
-
-
-def save_similarity_matrix(similarity_df, path):
-    similarity_df.to_pickle(path)
-
-def load_similarity_matrix(path):
-    return pd.read_pickle(path)
-
-
-def get_alpha(user_id, ratings_df, cold_start_threshold=5, default_alpha=0.7):
-    n_ratings = len(ratings_df[ratings_df['UserID'] == user_id])
-    return 1.0 if n_ratings <= cold_start_threshold else default_alpha
-
-
-def precompute_recommendations(svd_model, ratings_df, similarity_df, users, items, k=10, alpha=0.7, cache_path="models/user_recommendations.pkl"):
-    hybrid_scores = []
-    for user_id in users:
-        user_rated = set(ratings_df[ratings_df['UserID'] == user_id]['MovieID'])
-        for movie_id in items:
-            if movie_id in user_rated:
-                continue
-            cf_score = svd_model.predict(user_id, movie_id).est
-            cb_score = 0
-            for rated_movie_id in user_rated:
-                cb_score += similarity_df.loc[movie_id, rated_movie_id]
-            cb_score /= len(user_rated) if user_rated else 1
-            a = get_alpha(user_id, ratings_df, default_alpha=alpha)
-            hybrid_score = a * cf_score + (1 - a) * cb_score
-            hybrid_scores.append((user_id, movie_id, hybrid_score))
-    from collections import defaultdict
-    user_scores = defaultdict(list)
-    for user_id, movie_id, score in hybrid_scores:
-        user_scores[user_id].append((movie_id, score))
-    recommendations = {}
-    for uid in users:
-        ranked = sorted(user_scores[uid], key=lambda x: x[1], reverse=True)
-        recommendations[uid] = [mid for mid, _ in ranked[:k]]
-    import pickle
-    with open(cache_path, "wb") as f:
-        pickle.dump(recommendations, f)
-    return recommendations
 
 
 def cache_popular_items(ratings_df, movies_df, k=10, cache_path="models/popular_items.pkl"):
