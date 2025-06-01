@@ -22,25 +22,38 @@
     <div class="container mt-5">
         <h1 class="text-center text-warning display-4 fw-bold">HistFlix</h1>
         <p class="text-center text-light">
-            {{ 'Enter your User ID to get personalized movie recommendations.' if lang == 'en' else 'Insira seu ID de Usuário para receber recomendações personalizadas de filmes.' }}
+            {{ 'Choose a recommendation mode:' if lang == 'en' else 'Escolha um modo de recomendação:' }}
         </p>
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <form action="/recommend" method="post" class="p-4 border rounded bg-dark">
-                    <div class="mb-3">
-                        <label for="user_id" class="form-label text-light">{{ 'User ID:' if lang == 'en' else 'ID de Usuário:' }}</label>
-                        <input type="number" id="user_id" name="user_id" class="form-control" required>
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-5 mb-3">
+                <div class="card bg-dark border-warning h-100">
+                    <div class="card-body">
+                        <h3 class="card-title text-warning">{{ 'Hybrid Recommendation' if lang == 'en' else 'Recomendação Híbrida' }}</h3>
+                        <p class="card-text text-light">
+                            {{
+                                'Combines your historical ratings (collaborative filtering) and movie content similarity to suggest films you are likely to enjoy. Enter your User ID to get personalized recommendations.'
+                                if lang == 'en' else
+                                'Combina seu histórico de avaliações (filtragem colaborativa) e similaridade de conteúdo dos filmes para sugerir títulos que você provavelmente vai gostar. Informe seu ID de usuário para recomendações personalizadas.'
+                            }}
+                        </p>
+                        <a href="/hybrid" class="btn btn-warning w-100">{{ 'Hybrid Recommendation' if lang == 'en' else 'Recomendação Híbrida' }}</a>
                     </div>
-                    <div class="mb-3">
-                        <label for="n" class="form-label text-light">{{ 'Number of Recommendations:' if lang == 'en' else 'Número de Recomendações:' }}</label>
-                        <input type="number" id="n" name="n" class="form-control" value="10">
+                </div>
+            </div>
+            <div class="col-md-5 mb-3">
+                <div class="card bg-dark border-warning h-100">
+                    <div class="card-body">
+                        <h3 class="card-title text-warning">{{ 'Sentiment Recommendation' if lang == 'en' else 'Recomendação por Sentimento' }}</h3>
+                        <p class="card-text text-light">
+                            {{
+                                'Describe your mood or preferences in natural language. The system detects your emotions and suggests movies that match your current feeling.'
+                                if lang == 'en' else
+                                'Descreva seu humor ou preferências em linguagem natural. O sistema detecta suas emoções e sugere filmes que combinam com seu estado emocional.'
+                            }}
+                        </p>
+                        <a href="/sentiment" class="btn btn-outline-warning w-100">{{ 'Sentiment Recommendation' if lang == 'en' else 'Recomendação por Sentimento' }}</a>
                     </div>
-                    <div class="mb-3">
-                        <label for="alpha" class="form-label text-light">{{ 'Hybrid Weight (Alpha):' if lang == 'en' else 'Peso Híbrido (Alpha):' }}</label>
-                        <input type="number" id="alpha" name="alpha" class="form-control" step="0.1" value="0.7">
-                    </div>
-                    <button type="submit" class="btn btn-warning w-100">{{ 'Get Recommendations' if lang == 'en' else 'Obter Recomendações' }}</button>
-                </form>
+                </div>
             </div>
         </div>
     </div>

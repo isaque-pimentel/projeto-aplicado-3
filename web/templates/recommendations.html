@@ -14,8 +14,8 @@
         <div class="container">
             <a class="navbar-brand text-warning fw-bold" href="/">HistFlix</a>
             <div class="ms-auto">
-                <a href="/?lang=en" class="btn btn-outline-warning btn-sm me-2">English</a>
-                <a href="/?lang=pt-br" class="btn btn-outline-warning btn-sm">Português</a>
+                <a href="{{ request.path }}?lang=en" class="btn btn-outline-warning btn-sm me-2">English</a>
+                <a href="{{ request.path }}?lang=pt-br" class="btn btn-outline-warning btn-sm">Português</a>
             </div>
         </div>
     </nav>
@@ -42,6 +42,11 @@
             </tbody>
         </table>
         <div class="text-center mt-4">
+            {% if from_sentiment %}
+                <a href="/sentiment?lang={{ lang }}" class="btn btn-outline-warning me-2">{{ 'Back to Sentiment' if lang == 'en' else 'Voltar para Sentimento' }}</a>
+            {% else %}
+                <a href="/hybrid?lang={{ lang }}" class="btn btn-outline-warning me-2">{{ 'Back to Hybrid' if lang == 'en' else 'Voltar para Híbrido' }}</a>
+            {% endif %}
             <a href="/" class="btn btn-warning">{{ 'Back to Home' if lang == 'en' else 'Voltar para a Página Inicial' }}</a>
         </div>
     </div>
