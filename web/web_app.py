@@ -12,16 +12,8 @@ from scripts.sentiment_recommendation import (
     explain_emotion_recommendation,
     recommend_movies_multi_emotion,
 )
-from scripts.hybrid_recommendation_system import (
-    calculate_content_similarity,
-)
-from scripts.helpers import (
-    get_dynamic_alpha,
-    print_table,
-    load_similarity_matrix,
-    save_similarity_matrix,
-    evaluate_recommendations,
-)
+from scripts.helpers import get_dynamic_alpha
+
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -84,29 +76,66 @@ def sentiment():
     user_input = ""
     interpreted_sentiment = None
     user_id = None
+    n = 4  # default
     if request.method == "POST":
         user_input = request.form.get("user_input", "")
-        n = int(request.form.get("n", 10))
+        n = int(request.form.get("n", 4))
         user_id_raw = request.form.get("user_id", "")
         try:
             emotion_weights, clarification, translation_error = detect_emotions_multi_label(user_input)
-            interpreted_sentiment = emotion_weights  # Show this to user
+            interpreted_sentiment = emotion_weights
             explanation = explain_emotion_recommendation(emotion_weights)
-            # Hybridize with user ID if provided and valid
+            # Show clarification/translation error as part of error if present
+            if translation_error:
+                error = (translation_error if lang == "en" else f"Aviso de tradução: {translation_error}")
+            if clarification:
+                error = (clarification if lang == "en" else f"{clarification}")
+            # Hybridization with user history if user_id provided and valid
             if user_id_raw.strip():
                 try:
                     user_id = int(user_id_raw)
                     if user_id in ratings_df["UserID"].values:
-                        from scripts.hybrid_recommendation_system import hybridize_sentiment_with_user
-                        recommendations = hybridize_sentiment_with_user(movies_df, ratings_df, user_id, emotion_weights, n=n)
+                        # Hybrid: get top genres from emotion, then filter hybrid recs by those genres
+                        from scripts.hybrid_recommendation_system import calculate_hybrid_scores
+                        user_ratings = ratings_df[ratings_df["UserID"] == user_id]
+                        top_n = calculate_hybrid_scores(algo, user_ratings, similarity_df, alpha_func=get_dynamic_alpha)
+                        top_n.sort(key=lambda x: x[2], reverse=True)
+                        # Get top genres from emotion
+                        from scripts.sentiment_recommendation import get_genre_weights_for_emotions
+                        sorted_emotions = sorted(emotion_weights.items(), key=lambda x: x[1], reverse=True)
+                        top_emotions = [e for e, w in sorted_emotions if w > 0][:2]
+                        genre_weights = get_genre_weights_for_emotions(top_emotions)
+                        genre_set = set(genre_weights.keys())
+                        # Filter hybrid recs by genres
+                        filtered = []
+                        for _, movie_id, score in top_n:
+                            movie = movies_df[movies_df["MovieID"] == movie_id].iloc[0]
+                            movie_genres = set(str(movie["Genres"]).split("|"))
+                            if genre_set & movie_genres:
+                                filtered.append({
+                                    "Title": movie["Title"],
+                                    "Genres": movie["Genres"]
+                                })
+                            if len(filtered) >= n:
+                                break
+                        # If not enough, fill with sentiment-only recs
+                        if len(filtered) < n:
+                            extra = recommend_movies_multi_emotion(movies_df, emotion_weights, n=n-len(filtered))
+                            for _, row in extra.iterrows():
+                                filtered.append({"Title": row["Title"], "Genres": row["Genres"]})
+                        recommendations = filtered[:n]
                     else:
                         error = ("User ID not found. Showing recommendations based only on your mood." if lang == "en" else "ID de usuário não encontrado. Mostrando recomendações apenas pelo seu humor.")
-                        recommendations = recommend_movies_multi_emotion(movies_df, emotion_weights, n=n)
+                        recs = recommend_movies_multi_emotion(movies_df, emotion_weights, n=n)
+                        recommendations = [{"Title": row["Title"], "Genres": row["Genres"]} for _, row in recs.iterrows()]
                 except Exception:
                     error = ("Invalid User ID. Showing recommendations based only on your mood." if lang == "en" else "ID de usuário inválido. Mostrando recomendações apenas pelo seu humor.")
-                    recommendations = recommend_movies_multi_emotion(movies_df, emotion_weights, n=n)
+                    recs = recommend_movies_multi_emotion(movies_df, emotion_weights, n=n)
+                    recommendations = [{"Title": row["Title"], "Genres": row["Genres"]} for _, row in recs.iterrows()]
             else:
-                recommendations = recommend_movies_multi_emotion(movies_df, emotion_weights, n=n)
+                # Cold-start or mood-only
+                recs = recommend_movies_multi_emotion(movies_df, emotion_weights, n=n)
+                recommendations = [{"Title": row["Title"], "Genres": row["Genres"]} for _, row in recs.iterrows()]
         except Exception as e:
             error = str(e) if lang == "en" else f"Erro: {str(e)}"
     return render_template(
@@ -117,6 +146,8 @@ def sentiment():
         interpreted_sentiment=interpreted_sentiment,
         error=error,
         lang=lang,
+        n=n,
+        user_id=user_id,
         from_hybrid=False
     )
 

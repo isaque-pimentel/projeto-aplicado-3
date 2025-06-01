@@ -1,25 +1,50 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="{{ lang if lang else 'pt-br' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Erro</title>
+    <title>{{ 'Error' if lang == 'en' else 'Erro' }} - HistFlix</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="/static/styles.css" rel="stylesheet">
 </head>
-<body class="bg-dark text-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-danger">
+<body class="bg-black text-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-danger">
         <div class="container">
-            <a class="navbar-brand text-danger" href="/">HistFlix</a>
+            <a class="navbar-brand text-warning fw-bold" href="/?lang={{ lang }}">HistFlix</a>
+            <div class="ms-auto">
+                <a href="?lang=en" class="btn btn-outline-warning btn-sm me-2">English</a>
+                <a href="?lang=pt-br" class="btn btn-outline-warning btn-sm">Português</a>
+            </div>
         </div>
     </nav>
     <div class="container mt-5">
-        <h1 class="text-center text-danger">Ocorreu um Erro</h1>
-        <p class="text-center">{{ error }}</p>
-        <div class="text-center mt-4">
-            <a href="/" class="btn btn-danger">Voltar para a Página Inicial</a>
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card border-danger shadow-lg">
+                    <div class="card-body bg-dark text-center">
+                        <div class="mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-exclamation-triangle text-warning" viewBox="0 0 16 16" aria-hidden="true">
+                              <path d="M7.938 2.016a.13.13 0 0 1 .125 0l6.857 11.856c.06.104.01.228-.104.228H1.184c-.115 0-.164-.124-.104-.228L7.938 2.016zm.823-1.447c-.566-1.01-1.98-1.01-2.546 0L.358 12.425C-.21 13.433.522 14.5 1.684 14.5h12.632c1.162 0 1.894-1.067 1.326-2.075L8.76.57zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1-2.002 0 1 1 0 0 1 2.002 0z"/>
+                            </svg>
+                        </div>
+                        <h1 class="text-danger mb-3">{{ 'An Error Occurred' if lang == 'en' else 'Ocorreu um Erro' }}</h1>
+                        <p class="text-light mb-4" role="alert">{{ error }}</p>
+                        <p class="text-muted small mb-4">
+                            {{
+                                'Try again later, or return to the home page. If the problem persists, contact support.'
+                                if lang == 'en' else
+                                'Tente novamente mais tarde ou volte para a página inicial. Se o problema persistir, entre em contato com o suporte.'
+                            }}
+                        </p>
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="javascript:history.back()" class="btn btn-outline-warning">{{ 'Back' if lang == 'en' else 'Voltar' }}</a>
+                            <a href="/?lang={{ lang }}" class="btn btn-danger">{{ 'Home' if lang == 'en' else 'Página Inicial' }}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <!-- Bootstrap JS -->
