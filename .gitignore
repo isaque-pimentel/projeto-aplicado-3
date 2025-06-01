@@ -191,3 +191,10 @@ make.bat
 *.out
 *.snm
 *.synctex.gz
+
+# Pkl/CSV files
+*.pkl
+*.csv
+
+# Prompt files
+*prompt_*.md

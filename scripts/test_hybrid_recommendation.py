@@ -12,7 +12,7 @@ import os
 import sqlite3
 
 import pandas as pd
-from scripts.helpers import (
+from helpers import (
     calculate_content_similarity,
     evaluate_recommendations,
     load_model,

@@ -7,7 +7,7 @@ from scripts.hybrid_recommendation_system import calculate_content_similarity
 # Paths
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(PROJECT_DIR, "dataset", "sqlite", "movielens_1m.db")
-MODEL_PATH = os.path.join(PROJECT_DIR, "models", "svd_model_movielens_1m.pkl")
+MODEL_PATH = os.path.join(PROJECT_DIR, "models", "svd_movielens_1m_with_recency.pkl")
 
 # Load data and model
 def load_data():
