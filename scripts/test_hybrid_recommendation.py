@@ -74,7 +74,7 @@ if __name__ == "__main__":
         project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         db_path = os.path.join(project_dir, "dataset", "sqlite", "movielens_1m.db")
         model_path = os.path.join(project_dir, "models", "svd_movielens_1m_with_recency.pkl")
-        similarity_methods = ["tfidf", "count"]  # Point 3: allow multiple similarity matrices
+        similarity_methods = ["tfidf", "count"]
         sim_paths = [os.path.join(project_dir, "models", f"content_similarity_{m}.pkl") for m in similarity_methods]
 
         # Load model

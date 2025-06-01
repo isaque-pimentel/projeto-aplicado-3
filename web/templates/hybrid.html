@@ -9,7 +9,7 @@
 <body class="bg-black text-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-warning">
         <div class="container">
-            <a class="navbar-brand text-warning fw-bold" href="/">HistFlix</a>
+            <a class="navbar-brand text-warning fw-bold" href="/?lang={{ lang }}">HistFlix</a>
             <div class="ms-auto">
                 <a href="{{ request.path }}?lang=en" class="btn btn-outline-warning btn-sm me-2">English</a>
                 <a href="{{ request.path }}?lang=pt-br" class="btn btn-outline-warning btn-sm">Português</a>
@@ -20,30 +20,64 @@
         <h1 class="text-warning">{{ 'Hybrid Recommendation' if lang == 'en' else 'Recomendação Híbrida' }}</h1>
         <p class="text-light">
             {{
-                'This mode combines your historical ratings (collaborative filtering) and movie content similarity to suggest films you are likely to enjoy. Enter your User ID to get personalized recommendations.'
+                'This mode combines your historical ratings (collaborative filtering) and movie content similarity to suggest films you are likely to enjoy. Enter your User ID to get personalized recommendations. If you enter 0 as User ID, you will receive popular movie suggestions (cold-start mode).'
                 if lang == 'en' else
-                'Este modo combina seu histórico de avaliações (filtragem colaborativa) e similaridade de conteúdo dos filmes para sugerir títulos que você provavelmente vai gostar. Informe seu ID de usuário para recomendações personalizadas.'
+                'Este modo combina seu histórico de avaliações (filtragem colaborativa) e similaridade de conteúdo dos filmes para sugerir títulos que você provavelmente vai gostar. Informe seu ID de usuário para recomendações personalizadas. Se você digitar 0 como ID de usuário, receberá sugestões de filmes populares (modo cold-start).'
             }}
         </p>
-        <form action="/recommend" method="post" class="p-4 border rounded bg-dark mb-4">
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% elif feedback %}
+            <div class="alert alert-success">{{ feedback }}</div>
+        {% endif %}
+        <form id="hybrid-form" action="/recommend" method="post" class="p-4 border rounded bg-dark mb-4">
             <input type="hidden" name="lang" value="{{ lang }}">
             <div class="mb-3">
                 <label for="user_id" class="form-label text-light">{{ 'User ID:' if lang == 'en' else 'ID de Usuário:' }}</label>
-                <input type="number" id="user_id" name="user_id" class="form-control" required>
+                <input type="number" id="user_id" name="user_id" class="form-control" min="0" placeholder="{{ 'Leave blank or use the button below for popular recommendations' if lang == 'en' else 'Deixe em branco ou use o botão abaixo para recomendações populares' }}">
+                <small class="form-text text-muted">
+                    {{
+                        'If you do not know your User ID, you can get popular recommendations below.'
+                        if lang == 'en' else
+                        'Se não souber seu ID, use o botão abaixo para recomendações populares.'
+                    }}
+                </small>
             </div>
             <div class="mb-3">
-                <label for="n" class="form-label text-light">{{ 'Number of Recommendations:' if lang == 'en' else 'Número de Recomendações:' }}</label>
-                <input type="number" id="n" name="n" class="form-control" value="10">
+                <label class="form-label text-light">{{ 'Number of Recommendations:' if lang == 'en' else 'Número de Recomendações:' }}</label>
+                <div class="btn-group w-100" role="group" aria-label="n recommendations">
+                    {% for val in [5, 10, 15, 20] %}
+                    <input type="radio" class="btn-check" name="n" id="n{{ val }}" value="{{ val }}" autocomplete="off" {% if val == 10 %}checked{% endif %}>
+                    <label class="btn btn-outline-warning" for="n{{ val }}">{{ val }}</label>
+                    {% endfor %}
+                </div>
             </div>
             <div class="mb-3">
                 <label for="alpha" class="form-label text-light">{{ 'Hybrid Weight (Alpha):' if lang == 'en' else 'Peso Híbrido (Alpha):' }}</label>
-                <input type="number" id="alpha" name="alpha" class="form-control" step="0.1" value="0.7">
+                <div class="d-flex align-items-center">
+                    <input type="range" id="alpha" name="alpha" class="form-range me-3" min="0" max="1" step="0.1" value="0.7" oninput="document.getElementById('alpha-value').textContent = this.value">
+                    <span id="alpha-value" class="badge bg-warning text-dark">0.7</span>
+                </div>
+                <small class="form-text text-muted">
+                    {{
+                        'Alpha balances collaborative (low) and content-based (high) filtering. 0 = only collaborative, 1 = only content-based.'
+                        if lang == 'en' else
+                        'Alpha equilibra filtragem colaborativa (baixo) e baseada em conteúdo (alto). 0 = só colaborativa, 1 = só conteúdo.'
+                    }}
+                </small>
             </div>
-            <button type="submit" class="btn btn-warning w-100">{{ 'Get Recommendations' if lang == 'en' else 'Obter Recomendações' }}</button>
+            <button type="submit" class="btn btn-warning w-100 mb-2">{{ 'Get Recommendations' if lang == 'en' else 'Obter Recomendações' }}</button>
+            <button type="button" class="btn btn-outline-info w-100" onclick="popularRecs()">{{ 'Popular Recommendations (no ID)' if lang == 'en' else 'Recomendações Populares (sem ID)' }}</button>
         </form>
+        <script>
+        function popularRecs() {
+            document.getElementById('user_id').value = 0;
+            document.getElementById('hybrid-form').submit();
+        }
+        </script>
         <div class="text-center mt-4">
-            <a href="/sentiment" class="btn btn-outline-warning me-2">{{ 'Sentiment Recommendation' if lang == 'en' else 'Recomendação por Sentimento' }}</a>
-            <a href="/" class="btn btn-warning">{{ 'Back to Home' if lang == 'en' else 'Voltar para a Página Inicial' }}</a>
+            <a href="/sentiment?lang={{ lang }}" class="btn btn-outline-warning me-2">{{ 'Sentiment Recommendation' if lang == 'en' else 'Recomendação por Sentimento' }}</a>
+            <a href="/?lang={{ lang }}" class="btn btn-warning">{{ 'Back to Home' if lang == 'en' else 'Voltar para a Página Inicial' }}</a>
         </div>
     </div>
 </body>

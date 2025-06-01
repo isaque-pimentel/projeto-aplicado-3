@@ -12,7 +12,7 @@
 <body class="bg-black text-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-warning">
         <div class="container">
-            <a class="navbar-brand text-warning fw-bold" href="/">HistFlix</a>
+            <a class="navbar-brand text-warning fw-bold" href="/?lang={{ lang }}">HistFlix</a>
             <div class="ms-auto">
                 <a href="{{ request.path }}?lang=en" class="btn btn-outline-warning btn-sm me-2">English</a>
                 <a href="{{ request.path }}?lang=pt-br" class="btn btn-outline-warning btn-sm">Português</a>
@@ -24,19 +24,26 @@
         <table class="table table-striped table-dark table-bordered mt-4">
             <thead class="table-warning">
                 <tr>
-                    <th>{{ 'Movie ID' if lang == 'en' else 'ID do Filme' }}</th>
                     <th>{{ 'Title' if lang == 'en' else 'Título' }}</th>
+                    <th>{{ 'Year' if lang == 'en' else 'Ano' }}</th>
                     <th>{{ 'Genres' if lang == 'en' else 'Gêneros' }}</th>
                     <th>{{ 'Hybrid Score' if lang == 'en' else 'Pontuação Híbrida' }}</th>
+                    <!-- <th>{{ 'Feedback' if lang == 'en' else 'Feedback' }}</th> -->
                 </tr>
             </thead>
             <tbody>
                 {% for rec in recommendations %}
                 <tr>
-                    <td>{{ rec.MovieID }}</td>
                     <td>{{ rec.Title }}</td>
+                    <td>{{ rec.Title.split('(')[-1].replace(')','') if '(' in rec.Title and ')' in rec.Title else '' }}</td>
                     <td>{{ rec.Genres }}</td>
-                    <td>{{ rec.HybridScore }}</td>
+                    <td>{% if rec.HybridScore is defined %}{{ '%.1f'|format(rec.HybridScore) }}{% else %}-{% endif %}</td>
+                    <!-- <td>
+                        <form method="post" action="#" class="d-inline">
+                            <button type="button" class="btn btn-success btn-sm">👍</button>
+                            <button type="button" class="btn btn-danger btn-sm">👎</button>
+                        </form>
+                    </td> -->
                 </tr>
                 {% endfor %}
             </tbody>
@@ -47,7 +54,7 @@
             {% else %}
                 <a href="/hybrid?lang={{ lang }}" class="btn btn-outline-warning me-2">{{ 'Back to Hybrid' if lang == 'en' else 'Voltar para Híbrido' }}</a>
             {% endif %}
-            <a href="/" class="btn btn-warning">{{ 'Back to Home' if lang == 'en' else 'Voltar para a Página Inicial' }}</a>
+            <a href="/?lang={{ lang }}" class="btn btn-warning">{{ 'Back to Home' if lang == 'en' else 'Voltar para a Página Inicial' }}</a>
         </div>
     </div>
     <!-- Bootstrap JS -->
