@@ -477,3 +477,62 @@ def cache_popular_items(ratings_df, movies_df, k=10, cache_path="models/popular_
     with open(cache_path, "wb") as f:
         pickle.dump(popular_items, f)
     return popular_items
+
+
+# --- Recommendation Utilities ---
+def get_top_n_recommendations(algo, ratings_df, movies_df, user_id, n=10):
+    """
+    Generates the top N recommendations for a given user.
+    :param algo: The trained Surprise model.
+    :param ratings_df: DataFrame containing the ratings data.
+    :param movies_df: DataFrame containing movie information.
+    :param user_id: The ID of the user for whom to generate recommendations.
+    :param n: The number of recommendations to generate.
+    :return: A list of top N recommended movies with details.
+    """
+    all_movie_ids = movies_df["MovieID"].unique()
+    rated_movie_ids = ratings_df[ratings_df["UserID"] == user_id]["MovieID"].unique()
+    recommendations = []
+    for movie_id in all_movie_ids:
+        if movie_id not in rated_movie_ids:
+            pred = algo.predict(user_id, movie_id)
+            recommendations.append((movie_id, pred.est))
+    recommendations.sort(key=lambda x: x[1], reverse=True)
+    top_n = recommendations[:n]
+    top_n_details = [
+        {
+            "MovieID": movie_id,
+            "PredictedRating": predicted_rating,
+            **get_movie_details(movie_id, movies_df),
+        }
+        for movie_id, predicted_rating in top_n
+    ]
+    return top_n_details
+
+def compare_real_and_predicted_ratings(algo, ratings_df, movies_df, user_id):
+    """
+    Compares real ratings with predicted ratings for movies the user has already rated.
+    :param algo: The trained Surprise model.
+    :param ratings_df: DataFrame containing the ratings data.
+    :param movies_df: DataFrame containing movie information.
+    :param user_id: The ID of the user.
+    :return: A DataFrame with real and predicted ratings for movies the user has rated.
+    """
+    user_ratings = ratings_df[ratings_df["UserID"] == user_id]
+    comparisons = []
+    for _, row in user_ratings.iterrows():
+        movie_id = row["MovieID"]
+        real_rating = row["Rating"]
+        pred = algo.predict(user_id, movie_id)
+        movie_details = get_movie_details(movie_id, movies_df)
+        comparisons.append(
+            {
+                "MovieID": movie_id,
+                "Title": movie_details["Title"],
+                "Genres": movie_details["Genres"],
+                "RealRating": real_rating,
+                "PredictedRating": pred.est,
+            }
+        )
+    comparisons_df = pd.DataFrame(comparisons)
+    return comparisons_df

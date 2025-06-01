@@ -26,7 +26,6 @@ from helpers import (
     calculate_content_similarity,
     calculate_sentiment_scores,
     get_movie_details,
-    perform_cross_validation,
     save_model,
     load_model,
     get_coverage,
@@ -37,7 +36,6 @@ from helpers import (
     cold_start_item_recommendations,
     save_similarity_matrix,
     load_similarity_matrix,
-    get_alpha,
     precompute_recommendations,
     cache_popular_items,
 )

@@ -17,92 +17,11 @@ from helpers import (
     load_model,
     get_user_details,
     get_movie_details,
+    get_top_n_recommendations,
+    compare_real_and_predicted_ratings,
+    precision_recall_at_k,
+    calculate_rmse,
 )
-
-
-def get_top_n_recommendations(
-    algo, ratings_df: pd.DataFrame, movies_df: pd.DataFrame, user_id: int, n: int = 10
-):
-    """
-    Generates the top N recommendations for a given user.
-
-    :param algo: The trained Surprise model.
-    :param ratings_df: DataFrame containing the ratings data.
-    :param movies_df: DataFrame containing movie information.
-    :param user_id: The ID of the user for whom to generate recommendations.
-    :param n: The number of recommendations to generate.
-    :return: A list of top N recommended movies with details.
-    """
-    logging.info("Generating top %d recommendations for user %d", n, user_id)
-
-    # Get all movie IDs
-    all_movie_ids = movies_df["MovieID"].unique()
-
-    # Get the list of movies the user has already rated
-    rated_movie_ids = ratings_df[ratings_df["UserID"] == user_id]["MovieID"].unique()
-
-    # Predict ratings for all movies the user has not rated
-    recommendations = []
-    for movie_id in all_movie_ids:
-        if movie_id not in rated_movie_ids:
-            pred = algo.predict(user_id, movie_id)
-            recommendations.append((movie_id, pred.est))
-
-    # Sort recommendations by predicted rating
-    recommendations.sort(key=lambda x: x[1], reverse=True)
-
-    # Get details for the top N recommendations
-    top_n = recommendations[:n]
-    top_n_details = [
-        {
-            "MovieID": movie_id,
-            "PredictedRating": predicted_rating,
-            **get_movie_details(movie_id, movies_df),
-        }
-        for movie_id, predicted_rating in top_n
-    ]
-
-    return top_n_details
-
-
-def compare_real_and_predicted_ratings(
-    algo, ratings_df: pd.DataFrame, movies_df: pd.DataFrame, user_id: int
-):
-    """
-    Compares real ratings with predicted ratings for movies the user has already rated.
-
-    :param algo: The trained Surprise model.
-    :param ratings_df: DataFrame containing the ratings data.
-    :param movies_df: DataFrame containing movie information.
-    :param user_id: The ID of the user.
-    :return: A DataFrame with real and predicted ratings for movies the user has rated.
-    """
-    logging.info("Comparing real and predicted ratings for user %d", user_id)
-
-    # Get the list of movies the user has already rated
-    user_ratings = ratings_df[ratings_df["UserID"] == user_id]
-
-    # Predict ratings for these movies
-    comparisons = []
-    for _, row in user_ratings.iterrows():
-        movie_id = row["MovieID"]
-        real_rating = row["Rating"]
-        pred = algo.predict(user_id, movie_id)
-        movie_details = get_movie_details(movie_id, movies_df)
-        comparisons.append(
-            {
-                "MovieID": movie_id,
-                "Title": movie_details["Title"],
-                "Genres": movie_details["Genres"],
-                "RealRating": real_rating,
-                "PredictedRating": pred.est,
-            }
-        )
-
-    # Convert to DataFrame for tabular display
-    comparisons_df = pd.DataFrame(comparisons)
-    return comparisons_df
-
 
 if __name__ == "__main__":
     logging.info("Starting the interactive recommendation testing script.")
@@ -135,7 +54,6 @@ if __name__ == "__main__":
         user_details = get_user_details(user_id, users_df)
         print_table(pd.DataFrame([user_details]), "User Details")
 
-        # For each model, compare and display results
         for model_path, label in zip(model_paths, model_labels):
             print(f"\n===== Results for Model: {label} =====")
             # Load the trained model
@@ -149,5 +67,10 @@ if __name__ == "__main__":
             top_n = get_top_n_recommendations(algo, ratings_df, movies_df, user_id, n=10)
             recommendations_df = pd.DataFrame(top_n)
             print_table(recommendations_df, f"Top 10 Recommendations ({label})")
+            # Evaluate metrics for this user/model
+            preds = [algo.predict(user_id, row['MovieID']) for _, row in comparisons_df.iterrows()]
+            rmse = calculate_rmse(preds)
+            precision, recall = precision_recall_at_k(preds, k=10, threshold=3.5)
+            print(f"RMSE: {rmse:.4f} | Precision@10: {precision:.2f} | Recall@10: {recall:.2f}")
     except Exception as e:
         logging.critical("Interactive testing failed: %s", e, exc_info=True)
