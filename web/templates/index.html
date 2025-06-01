@@ -3,61 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ 'HistFlix - Recommendation System' if lang == 'en' else 'HistFlix - Sistema de Recomendação' }}</title>
-    <!-- Bootstrap CSS -->
+    <title>HistFlix</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
     <link href="/static/styles.css" rel="stylesheet">
 </head>
 <body class="bg-black text-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-warning">
         <div class="container">
-            <a class="navbar-brand text-warning fw-bold" href="/">HistFlix</a>
+            <a class="navbar-brand text-warning fw-bold" href="/?lang={{ lang }}">HistFlix</a>
             <div class="ms-auto">
-                <a href="/?lang=en" class="btn btn-outline-warning btn-sm me-2">English</a>
-                <a href="/?lang=pt-br" class="btn btn-outline-warning btn-sm">Português</a>
+                <a href="{{ request.path }}?lang=en" class="btn btn-outline-warning btn-sm me-2">English</a>
+                <a href="{{ request.path }}?lang=pt-br" class="btn btn-outline-warning btn-sm">Português</a>
             </div>
         </div>
     </nav>
-    <div class="container mt-5">
-        <h1 class="text-center text-warning display-4 fw-bold">HistFlix</h1>
-        <p class="text-center text-light">
-            {{ 'Choose a recommendation mode:' if lang == 'en' else 'Escolha um modo de recomendação:' }}
-        </p>
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-3 fw-bold text-warning">HistFlix</h1>
+            <p class="lead text-light">{{
+                'Discover historical movies and documentaries tailored to your taste or mood.'
+                if lang == 'en' else
+                'Descubra filmes e documentários históricos sob medida para seu gosto ou humor.'
+            }}</p>
+        </div>
         <div class="row justify-content-center mb-4">
             <div class="col-md-5 mb-3">
                 <div class="card bg-dark border-warning h-100">
-                    <div class="card-body">
-                        <h3 class="card-title text-warning">{{ 'Hybrid Recommendation' if lang == 'en' else 'Recomendação Híbrida' }}</h3>
+                    <div class="card-body text-center">
+                        <span class="display-4">⭐️</span>
+                        <h3 class="card-title text-warning mt-2">{{ 'Hybrid Recommendation' if lang == 'en' else 'Recomendação Híbrida' }}</h3>
                         <p class="card-text text-light">
                             {{
-                                'Combines your historical ratings (collaborative filtering) and movie content similarity to suggest films you are likely to enjoy. Enter your User ID to get personalized recommendations.'
+                                'Get personalized suggestions based on your ratings and movie content.'
                                 if lang == 'en' else
-                                'Combina seu histórico de avaliações (filtragem colaborativa) e similaridade de conteúdo dos filmes para sugerir títulos que você provavelmente vai gostar. Informe seu ID de usuário para recomendações personalizadas.'
+                                'Receba sugestões personalizadas com base nas suas avaliações e no conteúdo dos filmes.'
                             }}
                         </p>
-                        <a href="/hybrid" class="btn btn-warning w-100">{{ 'Hybrid Recommendation' if lang == 'en' else 'Recomendação Híbrida' }}</a>
+                        <a href="/hybrid?lang={{ lang }}" class="btn btn-warning w-100">{{ 'Hybrid Recommendation' if lang == 'en' else 'Recomendação Híbrida' }}</a>
                     </div>
                 </div>
             </div>
             <div class="col-md-5 mb-3">
                 <div class="card bg-dark border-warning h-100">
-                    <div class="card-body">
-                        <h3 class="card-title text-warning">{{ 'Sentiment Recommendation' if lang == 'en' else 'Recomendação por Sentimento' }}</h3>
+                    <div class="card-body text-center">
+                        <span class="display-4">💬</span>
+                        <h3 class="card-title text-warning mt-2">{{ 'Sentiment Recommendation' if lang == 'en' else 'Recomendação por Sentimento' }}</h3>
                         <p class="card-text text-light">
                             {{
-                                'Describe your mood or preferences in natural language. The system detects your emotions and suggests movies that match your current feeling.'
+                                'Describe your mood and get movie suggestions that match your feelings.'
                                 if lang == 'en' else
-                                'Descreva seu humor ou preferências em linguagem natural. O sistema detecta suas emoções e sugere filmes que combinam com seu estado emocional.'
+                                'Descreva seu humor e receba sugestões de filmes que combinam com seu sentimento.'
                             }}
                         </p>
-                        <a href="/sentiment" class="btn btn-outline-warning w-100">{{ 'Sentiment Recommendation' if lang == 'en' else 'Recomendação por Sentimento' }}</a>
+                        <a href="/sentiment?lang={{ lang }}" class="btn btn-outline-warning w-100">{{ 'Sentiment Recommendation' if lang == 'en' else 'Recomendação por Sentimento' }}</a>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="accordion mb-4" id="howItWorks">
+            <div class="accordion-item bg-dark border-warning">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button bg-dark text-warning collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                        {{ 'How does it work?' if lang == 'en' else 'Como funciona?' }}
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#howItWorks">
+                    <div class="accordion-body text-light">
+                        <ul>
+                            <li><b>{{ 'Hybrid Recommendation:' if lang == 'en' else 'Recomendação Híbrida:' }}</b> {{
+                                'Combines your historical ratings (collaborative filtering) and movie content similarity to suggest films you are likely to enjoy. Enter your User ID for personalized recommendations, or get popular suggestions if you do not have one.'
+                                if lang == 'en' else
+                                'Combina seu histórico de avaliações (filtragem colaborativa) e similaridade de conteúdo dos filmes para sugerir títulos que você provavelmente vai gostar. Informe seu ID de usuário para recomendações personalizadas ou receba sugestões populares se não tiver um.'
+                            }}</li>
+                            <li><b>{{ 'Sentiment Recommendation:' if lang == 'en' else 'Recomendação por Sentimento:' }}</b> {{
+                                'Describe your mood or preferences in natural language. The system detects your emotions and suggests movies that match your current feeling.'
+                                if lang == 'en' else
+                                'Descreva seu humor ou preferências em linguagem natural. O sistema detecta suas emoções e sugere filmes que combinam com seu sentimento atual.'
+                            }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="text-center mt-5 mb-2 text-secondary">
+            &copy; 2025 HistFlix
+        </footer>
     </div>
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
