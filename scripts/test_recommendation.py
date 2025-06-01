@@ -21,6 +21,34 @@ from helpers import (
     precision_recall_at_k,
     calculate_rmse,
 )
+from surprise import Prediction
+
+def show_cold_start_recommendations(ratings_df, movies_df, n=10):
+    """Show top-n popular movies for cold-start users."""
+    movie_counts = ratings_df["MovieID"].value_counts().head(n)
+    recommendations = movies_df[movies_df["MovieID"].isin(movie_counts.index)].copy()
+    recommendations["NumRatings"] = recommendations["MovieID"].map(movie_counts)
+    recommendations = recommendations.sort_values(by="NumRatings", ascending=False)
+    print_table(recommendations, f"Top {n} Popular Movies (Cold Start)")
+    print("\n--- End of evaluation for this user ---\n")
+
+def evaluate_and_print_model(algo, label, ratings_df, movies_df, user_id, n, threshold):
+    """Evaluate a model for a user and print results."""
+    print(f"\n===== Results for Model: {label} =====")
+    comparisons_df = compare_real_and_predicted_ratings(
+        algo, ratings_df, movies_df, user_id
+    )
+    print_table(comparisons_df, f"Real vs Predicted Ratings ({label})")
+    top_n = get_top_n_recommendations(algo, ratings_df, movies_df, user_id, n=n)
+    recommendations_df = pd.DataFrame(top_n)
+    print_table(recommendations_df, f"Top {n} Recommendations ({label})")
+    preds = [
+        Prediction(user_id, row['MovieID'], row['RealRating'], row['PredictedRating'], None)
+        for _, row in comparisons_df.iterrows()
+    ]
+    rmse = calculate_rmse(preds)
+    precision, recall = precision_recall_at_k(preds, k=n, threshold=threshold)
+    print(f"RMSE: {rmse:.4f} | Precision@{n}: {precision:.2f} | Recall@{n}: {recall:.2f}")
 
 if __name__ == "__main__":
     logging.info("Starting the interactive recommendation testing script.")
@@ -46,30 +74,37 @@ if __name__ == "__main__":
         # Validate the data
         validate_data(users_df, ratings_df, movies_df)
 
-        # Interactive testing
-        user_id = int(input("Enter the User ID for recommendations: "))
+        # Load all models once
+        loaded_models = [load_model(path) for path in model_paths]
 
-        # Display user details
-        user_details = get_user_details(user_id, users_df)
-        print_table(pd.DataFrame([user_details]), "User Details")
-
-        for model_path, label in zip(model_paths, model_labels):
-            print(f"\n===== Results for Model: {label} =====")
-            # Load the trained model
-            algo = load_model(model_path)
-            # Compare real and predicted ratings
-            comparisons_df = compare_real_and_predicted_ratings(
-                algo, ratings_df, movies_df, user_id
-            )
-            print_table(comparisons_df, f"Real vs Predicted Ratings ({label})")
-            # Generate and display recommendations
-            top_n = get_top_n_recommendations(algo, ratings_df, movies_df, user_id, n=10)
-            recommendations_df = pd.DataFrame(top_n)
-            print_table(recommendations_df, f"Top 10 Recommendations ({label})")
-            # Evaluate metrics for this user/model
-            preds = [algo.predict(user_id, row['MovieID']) for _, row in comparisons_df.iterrows()]
-            rmse = calculate_rmse(preds)
-            precision, recall = precision_recall_at_k(preds, k=10, threshold=3.5)
-            print(f"RMSE: {rmse:.4f} | Precision@10: {precision:.2f} | Recall@10: {recall:.2f}")
+        while True:
+            # Interactive testing
+            try:
+                user_id_input = input("Enter the User ID for recommendations (or -1 to exit): ")
+                user_id = int(user_id_input)
+            except ValueError:
+                print("Invalid input. Please enter a valid integer User ID or -1 to exit.")
+                continue
+            if user_id == -1:
+                print("Exiting interactive evaluation.")
+                break
+            # Check if user exists and has ratings
+            if user_id not in users_df['UserID'].values or ratings_df[ratings_df['UserID'] == user_id].empty:
+                show_cold_start_recommendations(ratings_df, movies_df, n=10)
+                continue
+            # Display user details
+            user_details = get_user_details(user_id, users_df)
+            print_table(pd.DataFrame([user_details]), "User Details")
+            try:
+                n = int(input("Enter the number of recommendations to display (default 10): ") or 10)
+            except ValueError:
+                n = 10
+            try:
+                threshold = float(input("Enter the threshold for Precision/Recall (default 3.5): ") or 3.5)
+            except ValueError:
+                threshold = 3.5
+            for algo, label in zip(loaded_models, model_labels):
+                evaluate_and_print_model(algo, label, ratings_df, movies_df, user_id, n, threshold)
+            print("\n--- End of evaluation for this user ---\n")
     except Exception as e:
         logging.critical("Interactive testing failed: %s", e, exc_info=True)
