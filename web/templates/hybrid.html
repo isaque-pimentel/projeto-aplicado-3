@@ -17,14 +17,17 @@
         </div>
     </nav>
     <div class="container mt-5">
-        <h1 class="text-warning">{{ 'Hybrid Recommendation' if lang == 'en' else 'Recomendação Híbrida' }}</h1>
-        <p class="text-light">
-            {{
-                'This mode combines your historical ratings (collaborative filtering) and movie content similarity to suggest films you are likely to enjoy. Enter your User ID to get personalized recommendations. If you enter 0 as User ID, you will receive popular movie suggestions (cold-start mode).'
-                if lang == 'en' else
-                'Este modo combina seu histórico de avaliações (filtragem colaborativa) e similaridade de conteúdo dos filmes para sugerir títulos que você provavelmente vai gostar. Informe seu ID de usuário para recomendações personalizadas. Se você digitar 0 como ID de usuário, receberá sugestões de filmes populares (modo cold-start).'
-            }}
-        </p>
+        <div class="text-center mb-4">
+            <span class="display-4">⭐️</span>
+            <h1 class="text-warning">{{ 'Hybrid Recommendation' if lang == 'en' else 'Recomendação Híbrida' }}</h1>
+            <p class="lead text-light">
+                {{
+                    'Get movie suggestions based on your ratings and movie content. Enter your User ID or get popular movies below.'
+                    if lang == 'en' else
+                    'Receba sugestões de filmes com base nas suas avaliações e no conteúdo dos filmes. Informe seu ID ou veja filmes populares abaixo.'
+                }}
+            </p>
+        </div>
         {% if error %}
             <div class="alert alert-danger">{{ error }}</div>
         {% elif feedback %}
@@ -34,8 +37,8 @@
             <input type="hidden" name="lang" value="{{ lang }}">
             <div class="mb-3">
                 <label for="user_id" class="form-label text-light">{{ 'User ID:' if lang == 'en' else 'ID de Usuário:' }}</label>
-                <input type="number" id="user_id" name="user_id" class="form-control" min="0" placeholder="{{ 'Leave blank or use the button below for popular recommendations' if lang == 'en' else 'Deixe em branco ou use o botão abaixo para recomendações populares' }}">
-                <small class="form-text text-muted">
+                <input type="number" id="user_id" name="user_id" class="form-control" min="0" placeholder="{{ 'Leave blank or use the button below for popular recommendations' if lang == 'en' else 'Deixe em branco ou use o botão abaixo para recomendações populares' }}" aria-describedby="userIdHelp">
+                <small id="userIdHelp" class="form-text text-muted">
                     {{
                         'If you do not know your User ID, you can get popular recommendations below.'
                         if lang == 'en' else
@@ -53,12 +56,20 @@
                 </div>
             </div>
             <div class="mb-3">
-                <label for="alpha" class="form-label text-light">{{ 'Hybrid Weight (Alpha):' if lang == 'en' else 'Peso Híbrido (Alpha):' }}</label>
+                <label for="alpha" class="form-label text-light">
+                    {{ 'Hybrid Weight (Alpha):' if lang == 'en' else 'Peso Híbrido (Alpha):' }}
+                    <span tabindex="0" data-bs-toggle="tooltip" title="{{ 'Alpha balances collaborative (low) and content-based (high) filtering. 0 = only collaborative, 1 = only content-based.' if lang == 'en' else 'Alpha equilibra filtragem colaborativa (baixo) e baseada em conteúdo (alto). 0 = só colaborativa, 1 = só conteúdo.' }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle text-warning ms-1" viewBox="0 0 16 16">
+                          <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
+                          <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 .877-.252 1.02-.797.07-.258.106-.438.288-.438.194 0 .234.176.162.438-.146.545-.487.797-1.02.797-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.288-.469l-.45-.083.082-.38 2.29-.287c.287-.036.352-.176.288-.469l-.738-3.468C7.002 2.422 7.301 2 8.004 2c.545 0 .877.252 1.02.797.07.258.106.438.288.438.194 0 .234-.176.162-.438-.146-.545-.487-.797-1.02-.797-.703 0-1.002.422-.808 1.319l.738 3.468c.064.293.006.399-.288.469z"/>
+                        </svg>
+                    </span>
+                </label>
                 <div class="d-flex align-items-center">
-                    <input type="range" id="alpha" name="alpha" class="form-range me-3" min="0" max="1" step="0.1" value="0.7" oninput="document.getElementById('alpha-value').textContent = this.value">
+                    <input type="range" id="alpha" name="alpha" class="form-range me-3" min="0" max="1" step="0.1" value="0.7" oninput="document.getElementById('alpha-value').textContent = this.value" aria-describedby="alphaHelp">
                     <span id="alpha-value" class="badge bg-warning text-dark">0.7</span>
                 </div>
-                <small class="form-text text-muted">
+                <small id="alphaHelp" class="form-text text-muted">
                     {{
                         'Alpha balances collaborative (low) and content-based (high) filtering. 0 = only collaborative, 1 = only content-based.'
                         if lang == 'en' else
@@ -74,6 +85,10 @@
             document.getElementById('user_id').value = 0;
             document.getElementById('hybrid-form').submit();
         }
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
         </script>
         <div class="text-center mt-4">
             <a href="/sentiment?lang={{ lang }}" class="btn btn-outline-warning me-2">{{ 'Sentiment Recommendation' if lang == 'en' else 'Recomendação por Sentimento' }}</a>

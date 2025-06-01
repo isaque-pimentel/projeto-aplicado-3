@@ -42,20 +42,17 @@ def recommend():
     session["lang"] = lang
     from_sentiment = request.form.get("from_sentiment", "false") == "true"
     try:
-        user_id = int(request.form["user_id"])
+        user_id = int(request.form.get("user_id", 0))
         n = int(request.form.get("n", 10))
         alpha = float(request.form.get("alpha", 0.7))
         # Cold-start: user_id==0 ou não existe no dataset
         if user_id == 0 or user_id not in ratings_df["UserID"].values:
-            # Usa a mesma lógica de show_cold_start_recommendations
             movie_counts = ratings_df["MovieID"].value_counts().head(n)
             recommendations = movies_df[movies_df["MovieID"].isin(movie_counts.index)].copy()
             recommendations["NumRatings"] = recommendations["MovieID"].map(movie_counts)
             recommendations = recommendations.sort_values(by="NumRatings", ascending=False)
-            # Adiciona coluna HybridScore=None para compatibilidade com o template
             recommendations["HybridScore"] = None
             recommendations = recommendations[["MovieID", "Title", "Genres", "NumRatings", "HybridScore"]]
-            # Converte para lista de dicionários para o template
             recommendations = recommendations.to_dict(orient="records")
         else:
             from scripts.hybrid_recommendation_system import calculate_hybrid_scores
@@ -74,7 +71,7 @@ def recommend():
                 })
         return render_template("recommendations.html", recommendations=recommendations, lang=lang, from_sentiment=from_sentiment)
     except Exception as e:
-        error_msg = ("Invalid User ID. Please enter a valid number." if lang == "en" else "ID de usuário inválido. Por favor, insira um número válido.")
+        error_msg = (str(e) if lang == "en" else f"Erro: {str(e)}")
         return render_template("error.html", error=error_msg, lang=lang)
 
 @app.route("/sentiment", methods=["GET", "POST"])
@@ -85,13 +82,31 @@ def sentiment():
     recommendations = None
     error = None
     user_input = ""
+    interpreted_sentiment = None
+    user_id = None
     if request.method == "POST":
         user_input = request.form.get("user_input", "")
         n = int(request.form.get("n", 10))
+        user_id_raw = request.form.get("user_id", "")
         try:
             emotion_weights, clarification, translation_error = detect_emotions_multi_label(user_input)
+            interpreted_sentiment = emotion_weights  # Show this to user
             explanation = explain_emotion_recommendation(emotion_weights)
-            recommendations = recommend_movies_multi_emotion(movies_df, emotion_weights, n=n)
+            # Hybridize with user ID if provided and valid
+            if user_id_raw.strip():
+                try:
+                    user_id = int(user_id_raw)
+                    if user_id in ratings_df["UserID"].values:
+                        from scripts.hybrid_recommendation_system import hybridize_sentiment_with_user
+                        recommendations = hybridize_sentiment_with_user(movies_df, ratings_df, user_id, emotion_weights, n=n)
+                    else:
+                        error = ("User ID not found. Showing recommendations based only on your mood." if lang == "en" else "ID de usuário não encontrado. Mostrando recomendações apenas pelo seu humor.")
+                        recommendations = recommend_movies_multi_emotion(movies_df, emotion_weights, n=n)
+                except Exception:
+                    error = ("Invalid User ID. Showing recommendations based only on your mood." if lang == "en" else "ID de usuário inválido. Mostrando recomendações apenas pelo seu humor.")
+                    recommendations = recommend_movies_multi_emotion(movies_df, emotion_weights, n=n)
+            else:
+                recommendations = recommend_movies_multi_emotion(movies_df, emotion_weights, n=n)
         except Exception as e:
             error = str(e) if lang == "en" else f"Erro: {str(e)}"
     return render_template(
@@ -99,6 +114,7 @@ def sentiment():
         user_input=user_input,
         explanation=explanation,
         recommendations=recommendations,
+        interpreted_sentiment=interpreted_sentiment,
         error=error,
         lang=lang,
         from_hybrid=False

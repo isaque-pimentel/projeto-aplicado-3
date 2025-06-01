@@ -1,48 +1,75 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
-    <title>Recomendação por Sentimento - HistFlix</title>
+    <title>{{ 'Sentiment Recommendation' if lang == 'en' else 'Recomendação por Sentimento' }} - HistFlix</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-black text-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-warning">
         <div class="container">
-            <a class="navbar-brand text-warning fw-bold" href="/">HistFlix</a>
+            <a class="navbar-brand text-warning fw-bold" href="/?lang={{ lang }}">HistFlix</a>
             <div class="ms-auto">
-                <a href="{{ request.path }}?lang=en" class="btn btn-outline-warning btn-sm me-2">English</a>
-                <a href="{{ request.path }}?lang=pt-br" class="btn btn-outline-warning btn-sm">Português</a>
+                <a href="/?lang=en" class="btn btn-outline-warning btn-sm me-2">English</a>
+                <a href="/?lang=pt-br" class="btn btn-outline-warning btn-sm">Português</a>
             </div>
         </div>
     </nav>
     <div class="container mt-5">
-        <h1 class="text-warning">Recomendação por Sentimento</h1>
-        <form action="/recommend" method="post" class="p-4 border rounded bg-dark mb-4">
-            <input type="hidden" name="lang" value="{{ lang }}">
-            <input type="hidden" name="from_sentiment" value="true">
-            <div class="mb-3">
-                <label for="user_input" class="form-label">{{ 'Describe your mood or preferences:' if lang == 'en' else 'Descreva seu humor ou preferências:' }}</label>
-                <input type="text" class="form-control" id="user_input" name="user_input" value="{{ user_input }}" required>
-            </div>
-            <div class="mb-3">
-                <label for="n" class="form-label">{{ 'Number of recommendations:' if lang == 'en' else 'Número de recomendações:' }}</label>
-                <input type="number" class="form-control" id="n" name="n" value="10">
-            </div>
-            <button type="submit" class="btn btn-warning">{{ 'Get Recommendations' if lang == 'en' else 'Obter recomendações' }}</button>
-        </form>
+        <div class="text-center mb-4">
+            <span class="display-4">💬</span>
+            <h1 class="text-warning">{{ 'Sentiment Recommendation' if lang == 'en' else 'Recomendação por Sentimento' }}</h1>
+            <p class="lead text-light">{{
+                'Describe your mood and get movie suggestions that match your feelings. Optionally, enter your User ID for more personalized results.'
+                if lang == 'en' else
+                'Descreva seu humor e receba sugestões de filmes que combinam com seu sentimento. Opcionalmente, informe seu ID para resultados mais personalizados.'
+            }}</p>
+        </div>
         {% if error %}
-            <div class="alert alert-danger">Erro: {{ error }}</div>
+            <div class="alert alert-danger">{{ error }}</div>
         {% endif %}
         {% if explanation %}
             <div class="alert alert-info">{{ explanation }}</div>
         {% endif %}
+        {% if interpreted_emotion %}
+            <div class="alert alert-secondary">{{ 'Detected sentiment:' if lang == 'en' else 'Sentimento detectado:' }} {{ interpreted_emotion }}</div>
+        {% endif %}
+        <form action="/sentiment" method="post" class="p-4 border rounded bg-dark mb-4">
+            <input type="hidden" name="lang" value="{{ lang }}">
+            <div class="mb-3">
+                <label for="user_input" class="form-label">{{ 'Describe your mood or preferences:' if lang == 'en' else 'Descreva seu humor ou preferências:' }}</label>
+                <textarea class="form-control" id="user_input" name="user_input" rows="3" required placeholder="{{ 'e.g. I want something inspiring and emotional' if lang == 'en' else 'ex: Quero algo inspirador e emocionante' }}">{{ user_input }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label for="user_id" class="form-label text-light">{{ 'User ID (optional):' if lang == 'en' else 'ID de Usuário (opcional):' }}</label>
+                <input type="number" id="user_id" name="user_id" class="form-control" min="0" value="{{ user_id if user_id is not none else '' }}" placeholder="{{ 'Leave blank for mood-based only' if lang == 'en' else 'Deixe em branco para apenas sentimento' }}">
+                <small class="form-text text-muted">
+                    {{
+                        'If you provide your User ID, recommendations will also consider your past ratings.'
+                        if lang == 'en' else
+                        'Se informar seu ID, as recomendações também considerarão seu histórico.'
+                    }}
+                </small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">{{ 'Number of recommendations:' if lang == 'en' else 'Número de recomendações:' }}</label>
+                <div class="btn-group w-100" role="group" aria-label="n recommendations">
+                    {% for val in [5, 10, 15, 20] %}
+                    {% set checked = (n is defined and n|string == val|string) or (n is not defined and val == 10) %}
+                    <input type="radio" class="btn-check" name="n" id="n{{ val }}" value="{{ val }}" autocomplete="off" {% if checked %}checked{% endif %}>
+                    <label class="btn btn-outline-warning" for="n{{ val }}">{{ val }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+            <button type="submit" class="btn btn-warning w-100">{{ 'Get Recommendations' if lang == 'en' else 'Obter recomendações' }}</button>
+        </form>
         {% if recommendations %}
-            <h2 class="text-warning mt-4">Recomendações</h2>
+            <h2 class="text-warning mt-4">{{ 'Recommendations' if lang == 'en' else 'Recomendações' }}</h2>
             <table class="table table-dark table-striped">
                 <thead>
                     <tr>
-                        <th>Título</th>
-                        <th>Gêneros</th>
+                        <th>{{ 'Title' if lang == 'en' else 'Título' }}</th>
+                        <th>{{ 'Genres' if lang == 'en' else 'Gêneros' }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -54,11 +81,49 @@
                     {% endfor %}
                 </tbody>
             </table>
+        {% elif recommendations is not none %}
+            <div class="alert alert-secondary text-center">{{ 'No recommendations found.' if lang == 'en' else 'Nenhuma recomendação encontrada.' }}</div>
         {% endif %}
         <div class="text-center mt-4">
-            <a href="/to_hybrid" class="btn btn-outline-warning me-2">{{ 'Hybrid Recommendation' if lang == 'en' else 'Recomendação Híbrida' }}</a>
-            <a href="/" class="btn btn-warning">{{ 'Back to Home' if lang == 'en' else 'Voltar para a Página Inicial' }}</a>
+            <a href="/to_hybrid?lang={{ lang }}" class="btn btn-outline-warning me-2">{{ 'Hybrid Recommendation' if lang == 'en' else 'Recomendação Híbrida' }}</a>
+            <a href="/?lang={{ lang }}" class="btn btn-warning">{{ 'Back to Home' if lang == 'en' else 'Voltar para a Página Inicial' }}</a>
         </div>
+        <div class="accordion mt-5" id="howItWorks">
+            <div class="accordion-item bg-dark border-warning">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button bg-dark text-warning collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                        {{ 'How does it work?' if lang == 'en' else 'Como funciona?' }}
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#howItWorks">
+                    <div class="accordion-body text-light">
+                        <ul>
+                            <li><b>{{ 'Mood Detection:' if lang == 'en' else 'Detecção de Humor:' }}</b> {{
+                                'The system analyzes your text to detect emotions and suggest movies that match your current feeling.'
+                                if lang == 'en' else
+                                'O sistema analisa seu texto para detectar emoções e sugerir filmes que combinem com seu sentimento.'
+                            }}</li>
+                            <li><b>{{ 'Personalization:' if lang == 'en' else 'Personalização:' }}</b> {{
+                                'If you provide your User ID, your past ratings will also be considered for more accurate suggestions.'
+                                if lang == 'en' else
+                                'Se informar seu ID, seu histórico de avaliações também será considerado para sugestões mais precisas.'
+                            }}</li>
+                            <li><b>{{ 'Interpreted Sentiment:' if lang == 'en' else 'Sentimento Interpretado:' }}</b> {{
+                                'The detected emotions and their weights are shown above. This helps you understand how your input influenced the recommendations.'
+                                if lang == 'en' else
+                                'As emoções detectadas e seus pesos são exibidos acima. Isso ajuda a entender como sua resposta influenciou as recomendações.'
+                            }}</li>
+                            <li><b>{{ 'No User ID?' if lang == 'en' else 'Sem ID?' }}</b> {{
+                                'You can leave the User ID blank to get recommendations based only on your mood.'
+                                if lang == 'en' else
+                                'Você pode deixar o ID em branco para recomendações apenas pelo sentimento.'
+                            }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     </div>
 </body>
 </html>
