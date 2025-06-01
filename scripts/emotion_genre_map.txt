@@ -1,0 +1,14 @@
+# Format: emotion(s) -> genres (with optional weights)
+# Each line: emotion1[,emotion2,...]: genre1[:weight1],genre2[:weight2],...
+# Example:
+happy: Comedy:1.0,Adventure:0.7,Family:0.5
+sad: Drama:1.0,Romance:0.8
+excited: Action:1.0,Sci-Fi:0.8,Thriller:0.7
+calm: Documentary:1.0,History:0.8
+fear: Thriller:1.0,Horror:0.9
+angry: Crime:1.0,Action:0.8
+surprise: Mystery:1.0,Fantasy:0.8
+neutral: Drama:0.7,Documentary:0.7,History:0.7
+happy,romantic: Comedy:1.0,Romance:1.0,Comedy|Romance:1.2
+sad,nostalgic: Drama:1.0,Romance:0.8,History:0.5
+# Add more combinations as needed

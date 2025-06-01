@@ -535,3 +535,32 @@ def compare_real_and_predicted_ratings(algo, ratings_df, movies_df, user_id):
         )
     comparisons_df = pd.DataFrame(comparisons)
     return comparisons_df
+
+def get_user_id(ratings_df) -> int | None:
+    try:
+        associate = input("Deseja associar a recomendação ao seu histórico? (s/n): ").strip().lower()
+        if associate == 's':
+            user_id_input = input("Digite seu UserID (ou pressione Enter para ignorar): ").strip()
+            if user_id_input:
+                user_id = int(user_id_input)
+                if user_id not in ratings_df["UserID"].values:
+                    print("UserID não encontrado. Recomendação será feita sem personalização.")
+                    return None
+                return user_id
+            else:
+                print("UserID não informado. Recomendação será feita sem personalização.")
+    except Exception:
+        print("Erro ao processar UserID. Recomendação será feita sem personalização.")
+    return None
+
+def collect_user_feedback():
+    try:
+        feedback = input("Você gostou dessas recomendações? (s/n): ").strip().lower()
+        if feedback == 's':
+            print("Obrigado pelo seu feedback positivo!")
+        elif feedback == 'n':
+            print("Obrigado pelo seu feedback. Vamos trabalhar para melhorar!")
+        else:
+            print("Feedback não reconhecido. Obrigado mesmo assim!")
+    except Exception:
+        print("Erro ao registrar feedback.")
