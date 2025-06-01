@@ -1,6 +1,13 @@
 import os
 import sqlite3
 import pandas as pd
+
+import sys
+
+# Add the project root directory to PYTHONPATH
+PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_DIR)
+
 from scripts.helpers import load_model
 from scripts.hybrid_recommendation_system import calculate_content_similarity
 
@@ -9,6 +16,7 @@ PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(PROJECT_DIR, "dataset", "sqlite", "movielens_1m.db")
 MODEL_PATH = os.path.join(PROJECT_DIR, "models", "svd_movielens_1m_with_recency.pkl")
 
+
 # Load data and model
 def load_data():
     conn = sqlite3.connect(DB_PATH)
@@ -16,6 +24,7 @@ def load_data():
     movies_df = pd.read_sql("SELECT MovieID, Title, Genres FROM movies", conn)
     conn.close()
     return ratings_df, movies_df
+
 
 def load_backend():
     ratings_df, movies_df = load_data()

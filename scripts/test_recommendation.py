@@ -11,6 +11,12 @@ import logging
 import os
 import sqlite3
 import pandas as pd
+import sys
+import os
+
+# Add the project root directory to PYTHONPATH
+PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_DIR)
 from scripts.helpers import (
     print_table,
     validate_data,
@@ -23,6 +29,7 @@ from scripts.helpers import (
 )
 from surprise import Prediction
 
+
 def show_cold_start_recommendations(ratings_df, movies_df, n=10):
     """Show top-n popular movies for cold-start users."""
     movie_counts = ratings_df["MovieID"].value_counts().head(n)
@@ -31,6 +38,7 @@ def show_cold_start_recommendations(ratings_df, movies_df, n=10):
     recommendations = recommendations.sort_values(by="NumRatings", ascending=False)
     print_table(recommendations, f"Top {n} Popular Movies (Cold Start)")
     print("\n--- End of evaluation for this user ---\n")
+
 
 def evaluate_and_print_model(algo, label, ratings_df, movies_df, user_id, n, threshold):
     """Evaluate a model for a user and print results."""
@@ -43,12 +51,17 @@ def evaluate_and_print_model(algo, label, ratings_df, movies_df, user_id, n, thr
     recommendations_df = pd.DataFrame(top_n)
     print_table(recommendations_df, f"Top {n} Recommendations ({label})")
     preds = [
-        Prediction(user_id, row['MovieID'], row['RealRating'], row['PredictedRating'], None)
+        Prediction(
+            user_id, row["MovieID"], row["RealRating"], row["PredictedRating"], None
+        )
         for _, row in comparisons_df.iterrows()
     ]
     rmse = calculate_rmse(preds)
     precision, recall = precision_recall_at_k(preds, k=n, threshold=threshold)
-    print(f"RMSE: {rmse:.4f} | Precision@{n}: {precision:.2f} | Recall@{n}: {recall:.2f}")
+    print(
+        f"RMSE: {rmse:.4f} | Precision@{n}: {precision:.2f} | Recall@{n}: {recall:.2f}"
+    )
+
 
 if __name__ == "__main__":
     logging.info("Starting the interactive recommendation testing script.")
@@ -80,31 +93,48 @@ if __name__ == "__main__":
         while True:
             # Interactive testing
             try:
-                user_id_input = input("Enter the User ID for recommendations (or -1 to exit): ")
+                user_id_input = input(
+                    "Enter the User ID for recommendations (or -1 to exit): "
+                )
                 user_id = int(user_id_input)
             except ValueError:
-                print("Invalid input. Please enter a valid integer User ID or -1 to exit.")
+                print(
+                    "Invalid input. Please enter a valid integer User ID or -1 to exit."
+                )
                 continue
             if user_id == -1:
                 print("Exiting interactive evaluation.")
                 break
             # Check if user exists and has ratings
-            if user_id not in users_df['UserID'].values or ratings_df[ratings_df['UserID'] == user_id].empty:
+            if (
+                user_id not in users_df["UserID"].values
+                or ratings_df[ratings_df["UserID"] == user_id].empty
+            ):
                 show_cold_start_recommendations(ratings_df, movies_df, n=10)
                 continue
             # Display user details
             user_details = get_user_details(user_id, users_df)
             print_table(pd.DataFrame([user_details]), "User Details")
             try:
-                n = int(input("Enter the number of recommendations to display (default 10): ") or 10)
+                n = int(
+                    input(
+                        "Enter the number of recommendations to display (default 10): "
+                    )
+                    or 10
+                )
             except ValueError:
                 n = 10
             try:
-                threshold = float(input("Enter the threshold for Precision/Recall (default 3.5): ") or 3.5)
+                threshold = float(
+                    input("Enter the threshold for Precision/Recall (default 3.5): ")
+                    or 3.5
+                )
             except ValueError:
                 threshold = 3.5
             for algo, label in zip(loaded_models, model_labels):
-                evaluate_and_print_model(algo, label, ratings_df, movies_df, user_id, n, threshold)
+                evaluate_and_print_model(
+                    algo, label, ratings_df, movies_df, user_id, n, threshold
+                )
             print("\n--- End of evaluation for this user ---\n")
     except Exception as e:
         logging.critical("Interactive testing failed: %s", e, exc_info=True)

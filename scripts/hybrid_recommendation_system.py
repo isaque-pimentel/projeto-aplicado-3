@@ -19,6 +19,12 @@ from surprise import SVD, Dataset, Reader
 from collections import defaultdict, Counter
 from surprise.model_selection import train_test_split
 
+import sys
+import os
+
+# Add the project root directory to PYTHONPATH
+PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_DIR)
 from scripts.helpers import (
     calculate_content_similarity,
     save_model,
@@ -29,7 +35,12 @@ from scripts.helpers import (
     cache_popular_items,
 )
 
-LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "logs", "hybrid_recommendation_system.log")
+LOG_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "..",
+    "logs",
+    "hybrid_recommendation_system.log",
+)
 
 logging.basicConfig(
     level=logging.INFO,

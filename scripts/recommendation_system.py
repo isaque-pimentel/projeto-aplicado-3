@@ -16,6 +16,11 @@ from collections import defaultdict, Counter
 
 import numpy as np
 import pandas as pd
+import sys
+import os
+# Add the project root directory to PYTHONPATH
+PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_DIR)
 from scripts.helpers import precision_recall_at_k
 from surprise import SVD, Dataset, Reader, accuracy
 from surprise.model_selection import GridSearchCV

@@ -14,7 +14,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "logs", "data_analysis.log")
+LOG_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "logs", "data_analysis.log"
+)
 
 logging.basicConfig(
     level=logging.INFO,

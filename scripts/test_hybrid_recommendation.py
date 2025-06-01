@@ -11,6 +11,12 @@ import logging
 import os
 import sqlite3
 import pandas as pd
+import sys
+import os
+
+# Add the project root directory to PYTHONPATH
+PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_DIR)
 from scripts.helpers import (
     calculate_content_similarity,
     load_model,
@@ -22,7 +28,12 @@ from scripts.helpers import (
 )
 from scripts.hybrid_recommendation_system import calculate_hybrid_scores
 
-LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "logs", "test_hybrid_recommendation.log")
+LOG_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "..",
+    "logs",
+    "test_hybrid_recommendation.log",
+)
 
 
 logging.basicConfig(
@@ -34,6 +45,7 @@ logging.basicConfig(
     ],
 )
 
+
 def show_cold_start_recommendations(ratings_df, movies_df, n=10):
     """Show top-n popular movies for cold-start users."""
     movie_counts = ratings_df["MovieID"].value_counts().head(n)
@@ -43,29 +55,41 @@ def show_cold_start_recommendations(ratings_df, movies_df, n=10):
     print_table(recommendations, f"Top {n} Popular Movies (Cold Start)")
     print("\n--- End of evaluation for this user ---\n")
 
-def evaluate_and_print_hybrid(algo, ratings_df, movies_df, similarity_df, user_id, n, similarity_method):
+
+def evaluate_and_print_hybrid(
+    algo, ratings_df, movies_df, similarity_df, user_id, n, similarity_method
+):
     """Evaluate and print hybrid recommendations for a user."""
     user_ratings = ratings_df[ratings_df["UserID"] == user_id]
     if user_ratings.empty:
         show_cold_start_recommendations(ratings_df, movies_df, n=n)
         return
-    top_n = calculate_hybrid_scores(algo, user_ratings, similarity_df, alpha_func=get_dynamic_alpha)
+    top_n = calculate_hybrid_scores(
+        algo, user_ratings, similarity_df, alpha_func=get_dynamic_alpha
+    )
     top_n.sort(key=lambda x: x[2], reverse=True)
     top_n = top_n[:n]
-    recs = pd.DataFrame([
-        {
-            "MovieID": movie_id,
-            "Title": movies_df[movies_df["MovieID"] == movie_id]["Title"].values[0],
-            "Genres": movies_df[movies_df["MovieID"] == movie_id]["Genres"].values[0],
-            "HybridScore": score,
-        }
-        for _, movie_id, score in top_n
-    ])
-    print_table(recs, f"Top {n} Hybrid Recommendations for User {user_id} ({similarity_method})")
+    recs = pd.DataFrame(
+        [
+            {
+                "MovieID": movie_id,
+                "Title": movies_df[movies_df["MovieID"] == movie_id]["Title"].values[0],
+                "Genres": movies_df[movies_df["MovieID"] == movie_id]["Genres"].values[
+                    0
+                ],
+                "HybridScore": score,
+            }
+            for _, movie_id, score in top_n
+        ]
+    )
+    print_table(
+        recs, f"Top {n} Hybrid Recommendations for User {user_id} ({similarity_method})"
+    )
     metrics = evaluate_recommendations(recs, user_ratings, n=n)
     print("\nEvaluation Metrics:")
     for metric, value in metrics.items():
         print(f"{metric}: {value:.2f}")
+
 
 if __name__ == "__main__":
     logging.info("Starting the hybrid recommendation system testing script.")
@@ -73,9 +97,14 @@ if __name__ == "__main__":
         # Paths
         project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         db_path = os.path.join(project_dir, "dataset", "sqlite", "movielens_1m.db")
-        model_path = os.path.join(project_dir, "models", "svd_movielens_1m_with_recency.pkl")
+        model_path = os.path.join(
+            project_dir, "models", "svd_movielens_1m_with_recency.pkl"
+        )
         similarity_methods = ["tfidf", "count"]
-        sim_paths = [os.path.join(project_dir, "models", f"content_similarity_{m}.pkl") for m in similarity_methods]
+        sim_paths = [
+            os.path.join(project_dir, "models", f"content_similarity_{m}.pkl")
+            for m in similarity_methods
+        ]
 
         # Load model
         algo = load_model(model_path)
@@ -98,20 +127,31 @@ if __name__ == "__main__":
 
         while True:
             try:
-                user_id_input = input("Enter the User ID for recommendations (or -1 to exit): ")
+                user_id_input = input(
+                    "Enter the User ID for recommendations (or -1 to exit): "
+                )
                 user_id = int(user_id_input)
             except ValueError:
-                print("Invalid input. Please enter a valid integer User ID or -1 to exit.")
+                print(
+                    "Invalid input. Please enter a valid integer User ID or -1 to exit."
+                )
                 continue
             if user_id == -1:
                 print("Exiting interactive evaluation.")
                 break
             try:
-                n = int(input("Enter the number of recommendations to display (default 10): ") or 10)
+                n = int(
+                    input(
+                        "Enter the number of recommendations to display (default 10): "
+                    )
+                    or 10
+                )
             except ValueError:
                 n = 10
             for similarity_df, sim_method in similarity_dfs:
-                evaluate_and_print_hybrid(algo, ratings_df, movies_df, similarity_df, user_id, n, sim_method)
+                evaluate_and_print_hybrid(
+                    algo, ratings_df, movies_df, similarity_df, user_id, n, sim_method
+                )
             print("\n--- End of evaluation for this user ---\n")
         logging.info("Hybrid recommendation system testing completed successfully.")
     except Exception as e:
