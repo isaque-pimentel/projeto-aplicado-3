@@ -27,7 +27,7 @@ fi
 
 # Run the Flask application and capture errors
 echo "Starting the Flask application..."
-python3 web/web_app.py > web_app.log 2>&1 &
+python3 -m web.web_app > logs/web_app.log 2>&1 &
 FLASK_PID=$!
 
 # Wait for the Flask server to start

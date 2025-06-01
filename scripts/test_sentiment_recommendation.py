@@ -14,7 +14,7 @@ from sentiment_recommendation import (
     get_genre_weights_for_emotions,
     ask_user_to_adjust_emotion_genre,
 )
-from helpers import load_model, print_table, load_similarity_matrix
+from scripts.helpers import load_model, print_table, load_similarity_matrix
 
 
 def get_user_input_pt() -> str:

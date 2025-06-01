@@ -12,7 +12,7 @@ from typing import Tuple
 
 import pandas as pd
 
-LOG_FILE = "data_extraction.log"
+LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "logs", "data_extraction.log")
 
 logging.basicConfig(
     level=logging.DEBUG,

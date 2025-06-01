@@ -11,7 +11,7 @@ import logging
 import os
 import sqlite3
 import pandas as pd
-from helpers import (
+from scripts.helpers import (
     calculate_content_similarity,
     load_model,
     print_table,
@@ -20,9 +20,10 @@ from helpers import (
     get_dynamic_alpha,
     evaluate_recommendations,
 )
-from hybrid_recommendation_system import calculate_hybrid_scores
+from scripts.hybrid_recommendation_system import calculate_hybrid_scores
 
-LOG_FILE = "test_hybrid_recommendation.log"
+LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "logs", "test_hybrid_recommendation.log")
+
 
 logging.basicConfig(
     level=logging.INFO,

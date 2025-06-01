@@ -16,11 +16,11 @@ from collections import defaultdict, Counter
 
 import numpy as np
 import pandas as pd
-from helpers import precision_recall_at_k
+from scripts.helpers import precision_recall_at_k
 from surprise import SVD, Dataset, Reader, accuracy
 from surprise.model_selection import GridSearchCV
 
-LOG_FILE = "recommendation_system.log"
+LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "logs", "recommendation_system.log")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -318,7 +318,10 @@ def compare_models(ratings_df, model_path_with, model_path_without):
     print("Without Recency:", metrics_without)
     # Save to CSV for tracking
     df = pd.DataFrame([metrics_with, metrics_without], index=["With Recency", "Without Recency"])
-    df.to_csv("model_comparison.csv")
+    # Save to CSV in the models folder
+    models_dir = os.path.join(os.path.dirname(model_path_with), "")
+    csv_path = os.path.join(models_dir, "model_comparison.csv")
+    df.to_csv(csv_path)
     logging.info("Model comparison saved to model_comparison.csv")
 
 

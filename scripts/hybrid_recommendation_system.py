@@ -19,7 +19,7 @@ from surprise import SVD, Dataset, Reader
 from collections import defaultdict, Counter
 from surprise.model_selection import train_test_split
 
-from helpers import (
+from scripts.helpers import (
     calculate_content_similarity,
     save_model,
     load_model,
@@ -29,7 +29,7 @@ from helpers import (
     cache_popular_items,
 )
 
-LOG_FILE = "hybrid_recommendation_system.log"
+LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "logs", "hybrid_recommendation_system.log")
 
 logging.basicConfig(
     level=logging.INFO,
