@@ -20,20 +20,9 @@ from collections import defaultdict, Counter
 from surprise.model_selection import train_test_split
 
 from helpers import (
-    get_dynamic_alpha,
-    apply_time_decay_to_similarity,
-    rerank_for_diversity_novelty,
     calculate_content_similarity,
-    calculate_sentiment_scores,
-    get_movie_details,
     save_model,
     load_model,
-    get_coverage,
-    get_diversity,
-    get_novelty,
-    recommend_top_k,
-    cold_start_recommendations,
-    cold_start_item_recommendations,
     save_similarity_matrix,
     load_similarity_matrix,
     precompute_recommendations,
@@ -76,7 +65,9 @@ def calculate_hybrid_scores(
         cf_score = algo.predict(user_id, movie_id).est
         # Content-based filtering score
         cb_score = 0
-        user_rated_movies = ratings_df[ratings_df["UserID"] == user_id]["MovieID"].unique()
+        user_rated_movies = ratings_df[ratings_df["UserID"] == user_id][
+            "MovieID"
+        ].unique()
         for rated_movie_id in user_rated_movies:
             cb_score += similarity_df.loc[movie_id, rated_movie_id]
         cb_score /= len(user_rated_movies) if len(user_rated_movies) > 0 else 1
@@ -107,6 +98,32 @@ def train_collaborative_model(ratings_df: pd.DataFrame) -> SVD:
     logging.info("Best RMSE from cross-validation: %.4f", best_rmse)
 
     return best_model
+
+
+def perform_cross_validation(data, kfolds: int = 5) -> tuple:
+    """
+    Performs cross-validation to find the best model based on RMSE.
+    :param data: Surprise Dataset object.
+    :param kfolds: Number of folds for cross-validation.
+    :return: The best model and its RMSE.
+    """
+    logging.info("Performing cross-validation with %d folds.", kfolds)
+    best_rmse = float("inf")
+    best_model = None
+    for fold in range(kfolds):
+        trainset, testset = train_test_split(data, test_size=0.2, random_state=fold)
+        algo = SVD()
+        algo.fit(trainset)
+        predictions = algo.test(testset)
+        fold_rmse = np.sqrt(
+            np.mean([(true_r - est) ** 2 for (_, _, true_r, est, _) in predictions])
+        )
+        logging.info("Fold %d RMSE: %.4f", fold + 1, fold_rmse)
+        if fold_rmse < best_rmse:
+            best_rmse = fold_rmse
+            best_model = algo
+    logging.info("Best RMSE from cross-validation: %.4f", best_rmse)
+    return best_model, best_rmse
 
 
 def evaluate_hybrid_model(hybrid_scores, test_ratings_df, k=10, threshold=3.5):
@@ -185,8 +202,12 @@ if __name__ == "__main__":
         # Paths
         project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         db_path = os.path.join(project_dir, "dataset", "sqlite", "movielens_1m.db")
-        model_path_with = os.path.join(project_dir, "models", "svd_movielens_1m_with_recency.pkl")
-        model_path_without = os.path.join(project_dir, "models", "svd_movielens_1m_without_recency.pkl")
+        model_path_with = os.path.join(
+            project_dir, "models", "svd_movielens_1m_with_recency.pkl"
+        )
+        model_path_without = os.path.join(
+            project_dir, "models", "svd_movielens_1m_without_recency.pkl"
+        )
         # Load the ratings and movies data
         conn = sqlite3.connect(db_path)
         ratings_df = pd.read_sql("SELECT UserID, MovieID, Rating FROM ratings", conn)
@@ -199,26 +220,39 @@ if __name__ == "__main__":
         if os.path.exists(sim_path):
             similarity_df = load_similarity_matrix(sim_path)
         else:
-            similarity_df = calculate_content_similarity(movies_df, method=similarity_method)
+            similarity_df = calculate_content_similarity(
+                movies_df, method=similarity_method
+            )
             save_similarity_matrix(similarity_df, sim_path)
         # Load SVD model (choose best)
         svd_model = load_model(model_path_with)
-        users = ratings_df['UserID'].unique()
-        items = ratings_df['MovieID'].unique()
+        users = ratings_df["UserID"].unique()
+        items = ratings_df["MovieID"].unique()
         # Precompute and cache recommendations
         rec_cache_path = "models/user_recommendations.pkl"
         if os.path.exists(rec_cache_path):
             with open(rec_cache_path, "rb") as f:
                 recommendations = pickle.load(f)
         else:
-            recommendations = precompute_recommendations(svd_model, ratings_df, similarity_df, users, items, k=10, alpha=0.7, cache_path=rec_cache_path)
+            recommendations = precompute_recommendations(
+                svd_model,
+                ratings_df,
+                similarity_df,
+                users,
+                items,
+                k=10,
+                alpha=0.7,
+                cache_path=rec_cache_path,
+            )
         # Cache popular items for cold-start
         pop_cache_path = "models/popular_items.pkl"
         if os.path.exists(pop_cache_path):
             with open(pop_cache_path, "rb") as f:
                 popular_items = pickle.load(f)
         else:
-            popular_items = cache_popular_items(ratings_df, movies_df, k=10, cache_path=pop_cache_path)
+            popular_items = cache_popular_items(
+                ratings_df, movies_df, k=10, cache_path=pop_cache_path
+            )
         # Example: get recommendations for a user
         example_user = users[0]
         user_recs = recommendations.get(example_user, popular_items)
@@ -226,6 +260,8 @@ if __name__ == "__main__":
         # Example: cold-start for new user
         new_user_id = max(users) + 1
         logging.info(f"Cold-start recommendations for new user: {popular_items}")
-        logging.info("Hybrid recommendation system evaluation pipeline completed successfully.")
+        logging.info(
+            "Hybrid recommendation system evaluation pipeline completed successfully."
+        )
     except Exception as e:
         logging.critical("Pipeline failed: %s", e, exc_info=True)

@@ -16,7 +16,6 @@ from helpers import (
     validate_data,
     load_model,
     get_user_details,
-    get_movie_details,
     get_top_n_recommendations,
     compare_real_and_predicted_ratings,
     precision_recall_at_k,

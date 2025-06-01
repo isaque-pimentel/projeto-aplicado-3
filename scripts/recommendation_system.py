@@ -16,7 +16,7 @@ from collections import defaultdict, Counter
 
 import numpy as np
 import pandas as pd
-from helpers import perform_cross_validation, precision_recall_at_k
+from helpers import precision_recall_at_k
 from surprise import SVD, Dataset, Reader, accuracy
 from surprise.model_selection import GridSearchCV
 

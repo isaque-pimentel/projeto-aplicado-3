@@ -16,7 +16,6 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from surprise import SVD, accuracy
-from surprise.model_selection import train_test_split
 from tabulate import tabulate
 from textblob import TextBlob
 
