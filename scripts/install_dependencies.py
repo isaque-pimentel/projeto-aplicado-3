@@ -36,6 +36,8 @@ LIBRARIES = [
     "seaborn",  # Advanced visualizations
     "pytest",  # Automated testing
     "tabulate",
+    "vaderSentiment",  # Sentiment analysis
+    "emoji",  # Emoji handling
     "textblob",  # Text processing
     "nltk",  # Natural Language Toolkit,
     "googletrans==4.0.0-rc1",  # Google Translate API

@@ -17,7 +17,7 @@ from helpers import load_model, print_table, load_similarity_matrix
 from textblob import TextBlob
 
 from hybrid_recommendation_system import calculate_hybrid_scores
-from sentiment_recommendation import classify_emotion, recommend_movies_based_on_emotion, EMOTION_GENRE_MAP
+from sentiment_recommendation import classify_emotion, EMOTION_GENRE_MAP
 import traceback
 
 LOG_FILE = "test_sentiment_recommendation.log"
@@ -80,6 +80,20 @@ def recommend_hybrid_with_emotion(
         return filtered.head(n)
 
 
+def explain_emotion_to_user(emotion: str):
+    """
+    Print and log an explanation to the user about how their emotion influenced the recommendation.
+    """
+    genre_list = EMOTION_GENRE_MAP.get(emotion, EMOTION_GENRE_MAP["neutral"])
+    explanation = (
+        f"Sua emoção detectada foi: {emotion.capitalize()}. "
+        f"Por isso, priorizamos recomendações nos gêneros: {', '.join(genre_list)}. "
+        "Se quiser recomendações diferentes, tente descrever seu humor de outra forma."
+    )
+    print(explanation)
+    logging.info(f"User explanation: {explanation}")
+
+
 if __name__ == "__main__":
     logging.info("Starting the hybrid recommendation system testing script.")
     try:
@@ -125,7 +139,7 @@ if __name__ == "__main__":
             emotion = classify_emotion(user_input_en)
             logging.info(f"Detected emotion: {emotion}")
             print(f"\nEmoção detectada: {emotion.capitalize()}")
-            print(f"Recomendando filmes nos gêneros: {', '.join(EMOTION_GENRE_MAP[emotion])}")
+            explain_emotion_to_user(emotion)
         except Exception as e:
             print("Não foi possível detectar emoção. Mostrando filmes populares.")
             logging.error(f"Emotion detection failed: {e}\n{traceback.format_exc()}")
