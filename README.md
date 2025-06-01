@@ -159,3 +159,60 @@ Visualização da distribuição de avaliações, gêneros de filmes, etc.
 Identificação de padrões e insights relevantes para o sistema de recomendação.
 Apresentação de métricas de avaliação e exemplos de recomendações.
 McKinney, W. (2017). Python for data analysis: Data wrangling with Pandas, NumPy, and IPython. -->
+
+## 🌐 Web Application (HistFlix)
+
+### Descrição Geral
+
+A aplicação web HistFlix oferece uma interface amigável e bilíngue (português/inglês) para recomendações personalizadas de filmes históricos e documentários. O sistema utiliza modelos híbridos de recomendação e análise de sentimentos para sugerir conteúdos alinhados ao perfil e ao estado emocional do usuário.
+
+#### Principais Páginas
+- **Página Inicial:** Apresenta o sistema e permite ao usuário escolher entre recomendações híbridas ou baseadas em sentimento.  
+   ![Página Inicial](pictures/home_page.png)
+
+- **Recomendação Híbrida:** Permite ao usuário obter recomendações personalizadas combinando filtragem colaborativa e baseada em conteúdo. O usuário pode informar preferências e receber sugestões detalhadas.  
+   ![Recomendação Híbrida](pictures/hybrid_recommendation.png)
+
+- **Recomendação por Sentimento:** O usuário pode expressar seu estado emocional (texto ou seleção de emoção), e o sistema sugere filmes/documentários alinhados ao sentimento identificado.  
+   ![Recomendação por Sentimento](pictures/sentiment_recommendation.png)
+- **Página de Erro:** Exibe mensagens de erro amigáveis e bilíngues em caso de problemas ou entradas inválidas.
+
+A navegação é simples, com suporte a troca de idioma e mensagens claras em todas as páginas.
+
+### Como Executar a Aplicação Web
+
+Você pode rodar a aplicação de três formas principais a partir do diretório raiz do projeto:
+
+#### 1. Usando o script para Windows (CMD)
+```bash
+./run_web_app.cmd
+```
+
+#### 2. Usando o script para Unix/Linux/Mac (SH)
+```bash
+./run_web_app.sh
+```
+
+#### 3. Executando diretamente o arquivo Python
+```bash
+python -m web.web_app
+```
+Ou, alternativamente:
+```bash
+python web/web_app.py
+```
+
+A aplicação estará disponível em `http://127.0.0.1:5000/` por padrão.
+
+### Requisitos
+- Python 3.11+
+- Instale as dependências com:
+```bash
+pip install -r requirements.txt
+```
+
+### Observações Importantes
+- O sistema utiliza arquivos de modelo e banco de dados localizados nas pastas `models/` e `dataset/`.
+- Para funcionamento completo, certifique-se de que os arquivos `.pkl` e o banco SQLite estejam presentes.
+- O idioma pode ser alternado nas páginas da aplicação.
+- Logs de execução e erros são salvos na pasta `logs/`.
