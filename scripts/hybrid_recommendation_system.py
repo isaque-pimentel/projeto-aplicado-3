@@ -20,12 +20,26 @@ from collections import defaultdict, Counter
 from surprise.model_selection import train_test_split
 
 from helpers import (
+    get_dynamic_alpha,
+    apply_time_decay_to_similarity,
+    rerank_for_diversity_novelty,
     calculate_content_similarity,
     calculate_sentiment_scores,
     get_movie_details,
     perform_cross_validation,
     save_model,
     load_model,
+    get_coverage,
+    get_diversity,
+    get_novelty,
+    recommend_top_k,
+    cold_start_recommendations,
+    cold_start_item_recommendations,
+    save_similarity_matrix,
+    load_similarity_matrix,
+    get_alpha,
+    precompute_recommendations,
+    cache_popular_items,
 )
 
 LOG_FILE = "hybrid_recommendation_system.log"
@@ -38,65 +52,6 @@ logging.basicConfig(
         logging.StreamHandler(),  # Console output
     ],
 )
-
-
-def get_dynamic_alpha(user_id, ratings_df, min_alpha=0.3, max_alpha=1.0, cold_start_threshold=5):
-    """
-    Returns a dynamic alpha for a user: alpha=1 for new users (cold start),
-    otherwise increases from min_alpha to max_alpha with number of ratings.
-    """
-    n_ratings = len(ratings_df[ratings_df['UserID'] == user_id])
-    if n_ratings <= cold_start_threshold:
-        return 1.0
-    # Linear scaling for demonstration (can be changed to log or other)
-    alpha = min(max_alpha, min_alpha + 0.01 * n_ratings)
-    return alpha
-
-
-def apply_time_decay_to_similarity(similarity_df, movies_df, decay_rate=0.001):
-    """
-    Applies exponential time decay to content-based similarity based on movie release year (if available).
-    Assumes movies_df has columns: MovieID, Year.
-    """
-    if 'Year' not in movies_df.columns:
-        return similarity_df  # No year info, skip
-    year_dict = movies_df.set_index('MovieID')['Year'].to_dict()
-    max_year = max(year_dict.values())
-    for i in similarity_df.index:
-        for j in similarity_df.columns:
-            year_i = year_dict.get(i, max_year)
-            year_j = year_dict.get(j, max_year)
-            avg_year = (year_i + year_j) / 2
-            decay = np.exp(-decay_rate * (max_year - avg_year))
-            similarity_df.loc[i, j] *= decay
-    return similarity_df
-
-
-def rerank_for_diversity_novelty(recommendations, item_similarity, item_popularity, lambda_div=0.5, lambda_nov=0.5):
-    """
-    Rerank recommendations to increase diversity and novelty.
-    lambda_div: weight for diversity, lambda_nov: weight for novelty.
-    """
-    reranked = {}
-    for uid, recs in recommendations.items():
-        if not recs:
-            reranked[uid] = []
-            continue
-        selected = [recs[0]]
-        for _ in range(1, len(recs)):
-            candidates = [iid for iid in recs if iid not in selected]
-            scores = []
-            for iid in candidates:
-                # Diversity: min similarity to already selected
-                div = min([1 - item_similarity.get((iid, sid), 0) for sid in selected]) if selected else 1
-                # Novelty: inverse popularity
-                nov = 1 / (item_popularity.get(iid, 1))
-                scores.append((iid, lambda_div * div + lambda_nov * nov))
-            if scores:
-                best_iid = max(scores, key=lambda x: x[1])[0]
-                selected.append(best_iid)
-        reranked[uid] = selected
-    return reranked
 
 
 def calculate_hybrid_scores(
@@ -224,126 +179,6 @@ def train_and_save_hybrid_model(
     logging.info("Collaborative filtering model saved to %s", model_path)
 
     logging.info("Hybrid recommendation system training completed.")
-
-
-def get_coverage(recommendations, all_items):
-    recommended_items = set([iid for recs in recommendations.values() for iid in recs])
-    return len(recommended_items) / len(all_items)
-
-
-def get_diversity(recommendations, item_similarity):
-    diversities = []
-    for recs in recommendations.values():
-        if len(recs) < 2:
-            continue
-        pairs = [(recs[i], recs[j]) for i in range(len(recs)) for j in range(i + 1, len(recs))]
-        dissimilarities = [1 - item_similarity.get((a, b), 0) for a, b in pairs]
-        if dissimilarities:
-            diversities.append(np.mean(dissimilarities))
-    return np.mean(diversities) if diversities else 0
-
-
-def get_novelty(recommendations, item_popularity):
-    all_counts = np.array(list(item_popularity.values()))
-    ranks = {iid: (all_counts > item_popularity[iid]).sum() + 1 for iid in item_popularity}
-    novelty_scores = []
-    for recs in recommendations.values():
-        novelty_scores += [ranks.get(iid, 0) for iid in recs]
-    return np.mean(novelty_scores) if novelty_scores else 0
-
-
-def recommend_top_k(hybrid_scores, users, items, k=10):
-    from collections import defaultdict
-    user_scores = defaultdict(list)
-    for user_id, movie_id, score in hybrid_scores:
-        user_scores[user_id].append((movie_id, score))
-    recommendations = {}
-    for uid in users:
-        # Remove items already rated by user
-        rated = set([movie_id for movie_id, _ in user_scores[uid]])
-        candidates = [(mid, s) for mid, s in user_scores[uid] if mid not in rated]
-        ranked = sorted(user_scores[uid], key=lambda x: x[1], reverse=True)
-        recommendations[uid] = [mid for mid, _ in ranked[:k]]
-    return recommendations
-
-
-def cold_start_recommendations(user_id, movies_df, ratings_df, similarity_df, k=10):
-    """
-    Recommend top-k most popular or most similar items for cold-start users.
-    """
-    # Recommend most popular items not yet rated
-    rated = set(ratings_df[ratings_df['UserID'] == user_id]['MovieID'])
-    all_items = set(movies_df['MovieID'])
-    not_rated = list(all_items - rated)
-    # Popularity by number of ratings
-    item_popularity = ratings_df['MovieID'].value_counts()
-    popular_items = [iid for iid in item_popularity.index if iid in not_rated][:k]
-    # If not enough, fill with random or similar items
-    if len(popular_items) < k:
-        extra = [iid for iid in not_rated if iid not in popular_items][:k-len(popular_items)]
-        popular_items += extra
-    return popular_items[:k]
-
-
-def cold_start_item_recommendations(item_id, ratings_df, similarity_df, k=10):
-    """
-    Recommend top-k users for a new item based on content similarity or popularity.
-    """
-    # Recommend to most active users
-    user_activity = ratings_df['UserID'].value_counts()
-    return list(user_activity.index[:k])
-
-
-def save_similarity_matrix(similarity_df, path):
-    similarity_df.to_pickle(path)
-
-def load_similarity_matrix(path):
-    return pd.read_pickle(path)
-
-# Use a simple alpha: 1.0 for new users, else fixed (cheaper than dynamic)
-def get_alpha(user_id, ratings_df, cold_start_threshold=5, default_alpha=0.7):
-    n_ratings = len(ratings_df[ratings_df['UserID'] == user_id])
-    return 1.0 if n_ratings <= cold_start_threshold else default_alpha
-
-# Precompute and cache recommendations for all users
-def precompute_recommendations(svd_model, ratings_df, similarity_df, users, items, k=10, alpha=0.7, cache_path="models/user_recommendations.pkl"):
-    hybrid_scores = []
-    for user_id in users:
-        user_rated = set(ratings_df[ratings_df['UserID'] == user_id]['MovieID'])
-        for movie_id in items:
-            if movie_id in user_rated:
-                continue
-            cf_score = svd_model.predict(user_id, movie_id).est
-            cb_score = 0
-            for rated_movie_id in user_rated:
-                cb_score += similarity_df.loc[movie_id, rated_movie_id]
-            cb_score /= len(user_rated) if user_rated else 1
-            a = get_alpha(user_id, ratings_df, default_alpha=alpha)
-            hybrid_score = a * cf_score + (1 - a) * cb_score
-            hybrid_scores.append((user_id, movie_id, hybrid_score))
-    # Build recommendations dict
-    from collections import defaultdict
-    user_scores = defaultdict(list)
-    for user_id, movie_id, score in hybrid_scores:
-        user_scores[user_id].append((movie_id, score))
-    recommendations = {}
-    for uid in users:
-        ranked = sorted(user_scores[uid], key=lambda x: x[1], reverse=True)
-        recommendations[uid] = [mid for mid, _ in ranked[:k]]
-    # Save to disk
-    import pickle
-    with open(cache_path, "wb") as f:
-        pickle.dump(recommendations, f)
-    return recommendations
-
-# For cold-start: cache most popular items
-def cache_popular_items(ratings_df, movies_df, k=10, cache_path="models/popular_items.pkl"):
-    item_popularity = ratings_df['MovieID'].value_counts()
-    popular_items = [iid for iid in item_popularity.index if iid in set(movies_df['MovieID'])][:k]
-    import pickle
-    with open(cache_path, "wb") as f:
-        pickle.dump(popular_items, f)
-    return popular_items
 
 
 if __name__ == "__main__":
